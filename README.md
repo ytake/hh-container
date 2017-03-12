@@ -1,5 +1,8 @@
 # Headacke
 
+[![Build Status](https://travis-ci.org/ytake/headacke.svg?branch=develop
+)](https://travis-ci.org/ytake/headacke)
+
 simple light weight service location container
 
 ## Installation
