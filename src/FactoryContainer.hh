@@ -32,12 +32,13 @@ enum Scope: int {
  */
 class FactoryContainer implements ContainerInterface
 {
+  protected Map<string, Scope> $scopes = Map{ };
+
+  protected Set<string> $modules = Set{ };
 
   protected Map<string, (function(FactoryContainer): mixed)> $bindings = Map{ };
 
-  protected Map<string, Scope> $scopes = Map{ };
-
-  protected Vector<string> $modules = Vector{ };
+  protected array<string, array<string, (function(FactoryContainer): mixed)>> $parameters = [];
 
   /**
    * supported closure only
@@ -46,6 +47,11 @@ class FactoryContainer implements ContainerInterface
   {
     $this->bindings->add(Pair{$id, $callback});
     $this->scopes->add(Pair{$id, $scope});
+  }
+
+  public function parameters(string $id, string $name, (function(FactoryContainer): mixed) $callback): void
+  {
+    $this->parameters[$id][$name] = $callback;
   }
 
   /**
@@ -69,13 +75,30 @@ class FactoryContainer implements ContainerInterface
         return call_user_func($resolved, $this);
       }
     }
-    throw new NotFoundException(sprintf('Identifier "%s" is not binding.', $id));
+
+    try {
+      $arguments = [];
+      $reflectionClass = new \ReflectionClass($id);
+      if ($reflectionClass->isInstantiable()) {
+        $constructor = $reflectionClass->getConstructor();
+        if ($constructor instanceof \ReflectionMethod) {
+          $resolvedParameters = $this->resolveConstructorParameters($id, $constructor);
+          if ($resolvedParameters instanceof \Generator) {
+            $arguments = iterator_to_array($resolvedParameters);
+          }
+        }
+        return $reflectionClass->newInstanceArgs($arguments);
+      }
+    } catch(\ReflectionException $e) {
+      throw new NotFoundException(sprintf('Identifier "%s" is not binding.', $id));
+    }
+          throw new ContainerException(sprintf('Error retrieving "%s"', $id));
   }
 
   <<__Memoize>>
   protected function shared(string $id): mixed
   {
-      return call_user_func($this->bindings->at($id), $this);
+    return call_user_func($this->bindings->at($id), $this);
   }
 
   /**
@@ -120,6 +143,17 @@ class FactoryContainer implements ContainerInterface
   {
     foreach ($this->modules->getIterator() as $iterator) {
       (new $iterator())->provide($this);
+    }
+  }
+
+  protected function resolveConstructorParameters(string $id, \ReflectionMethod $constructor): \Generator
+  {
+    if ($parameters = $constructor->getParameters()) {
+      foreach ($parameters as $parameter) {
+        if (isset($this->parameters[$id][$parameter->getName()])) {
+          yield call_user_func($this->parameters[$id][$parameter->getName()], $this);
+        }
+      }
     }
   }
 }
