@@ -1,6 +1,7 @@
 # Headacke
 
-<<<<<<< HEAD
+<<<<<<<
+
 simple light weight service location / dependency injection container
 
 **H** aed **ack** e
