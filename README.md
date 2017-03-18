@@ -4,7 +4,7 @@
 
 simple light weight service location / dependency injection container
 
-**H** aed **ack** e
+**H** ead **ack** e
 
 [![Build Status](https://travis-ci.org/ytake/headacke.svg?branch=develop
 )](https://travis-ci.org/ytake/headacke)
