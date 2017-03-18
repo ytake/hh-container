@@ -5,28 +5,24 @@ class ContainerTest extends \PHPUnit\Framework\TestCase
   public function testShouldReturnPrimitiveTypes(): void
   {
     $container = new \Headacke\FactoryContainer();
-    $container->set('testing', function ($container) {
-      return 'testing';
-    });
+    $container->set('testing', $container ==> 'testing');
     $this->assertSame('testing', $container->get('testing'));
 
-    $container->set('testing123', function ($container) {
-      return 1;
-    });
+    $container->set('testing123', $container ==> 1);
     $this->assertSame(1, $container->get('testing123'));
 
-    $container->set('testing:testing', function ($container) {
-      return true;
-    });
+    $container->set('testing:testing', $container ==> true);
     $this->assertSame(true, $container->get('testing:testing'));
   }
 
   public function testShouldReturnSingletonObject(): void
   {
     $container = new \Headacke\FactoryContainer();
-    $container->set('testing:testing', function ($container) {
-      return new \stdClass();
-    }, \Headacke\Scope::SINGLETON);
+    $container->set(
+      'testing:testing',
+      $container ==> new \stdClass(),
+      \Headacke\Scope::SINGLETON
+    );
     $this->assertInstanceOf(\stdClass::class, $container->get('testing:testing'));
     $this->assertSame($container->get('testing:testing'), $container->get('testing:testing'));
   }
@@ -34,9 +30,7 @@ class ContainerTest extends \PHPUnit\Framework\TestCase
   public function testShouldReturnPrototypeObject(): void
   {
     $container = new \Headacke\FactoryContainer();
-    $container->set('testing:testing', function ($container) {
-      return new \stdClass();
-    }, \Headacke\Scope::PROTOTYPE);
+    $container->set('testing:testing', $container ==> new \stdClass(), \Headacke\Scope::PROTOTYPE);
     $this->assertInstanceOf(\stdClass::class, $container->get('testing:testing'));
     $this->assertNotSame($container->get('testing:testing'), $container->get('testing:testing'));
   }
@@ -44,12 +38,12 @@ class ContainerTest extends \PHPUnit\Framework\TestCase
   public function testShouldReturunResolveInstance(): void
   {
       $container = new \Headacke\FactoryContainer();
-      $container->set('testing', function ($container) {
-        return 1;
-      });
-      $container->set('testing:testing', function ($container) {
-        return $container->get('testing');
-      }, \Headacke\Scope::PROTOTYPE);
+      $container->set('testing', $container ==> 1);
+      $container->set(
+        'testing:testing',
+        $container ==> $container->get('testing'),
+        \Headacke\Scope::PROTOTYPE
+      );
       $this->assertSame(1, $container->get('testing:testing'));
   }
 
@@ -72,12 +66,8 @@ class ContainerTest extends \PHPUnit\Framework\TestCase
   {
     $container = new \Headacke\FactoryContainer();
     $this->assertInstanceOf(\stdClass::class, $container->get(\stdClass::class));
-    $container->parameters(ResolvedObject::class, 'object', function ($container) {
-      return new \stdClass();
-    });
-    $container->parameters(ResolvedObject::class, 'integer', function ($container) {
-      return 100;
-    });
+    $container->parameters(ResolvedObject::class, 'object', $container ==> new \stdClass());
+    $container->parameters(ResolvedObject::class, 'integer', $container ==> 100);
     $instance = $container->get(ResolvedObject::class);
     $this->assertInstanceOf(ResolvedObject::class, $instance);
   }
@@ -85,12 +75,8 @@ class ContainerTest extends \PHPUnit\Framework\TestCase
   public function testShouldResolveConstructorPromotionInstance(): void
   {
     $container = new \Headacke\FactoryContainer();
-    $container->parameters(ConstructorPromotionClass::class, 'object', function ($container) {
-      return new \stdClass();
-    });
-    $container->parameters(ConstructorPromotionClass::class, 'integer', function ($container) {
-      return 100;
-    });
+    $container->parameters(ConstructorPromotionClass::class, 'object', $container ==> new \stdClass());
+    $container->parameters(ConstructorPromotionClass::class, 'integer', $container ==> 100);
     $instance = $container->get(ConstructorPromotionClass::class);
     $this->assertInstanceOf(ConstructorPromotionClass::class, $instance);
     if ($instance instanceof ConstructorPromotionClass) {
@@ -101,12 +87,8 @@ class ContainerTest extends \PHPUnit\Framework\TestCase
   public function testShouldResolveDependencyInjectionWithLocation(): void
   {
     $container = new \Headacke\FactoryContainer();
-    $container->set('message.class', function ($container) {
-      return new MockMessageClass('testing');
-    });
-    $container->parameters(MessageClient::class, 'message', function ($container) {
-      return $container->get('message.class');
-    });
+    $container->set('message.class', $container ==>  new MockMessageClass('testing'));
+    $container->parameters(MessageClient::class, 'message', $container ==> $container->get('message.class'));
     $instance = $container->get(MessageClient::class);
     if ($instance instanceof MessageClient) {
       $this->assertSame('testing', $instance->message()->message());
@@ -118,10 +100,7 @@ class StubModule extends \Headacke\ServiceModule
 {
   public function provide(\Headacke\FactoryContainer $container): void
   {
-    $container->set('provide:sample', function ($container) {
-      $class = new \stdClass();
-      return $class;
-    });
+    $container->set('provide:sample', $container ==> new \stdClass());
   }
 }
 

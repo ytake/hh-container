@@ -26,9 +26,7 @@ $ hhvm --php $(which composer) require ytake/headacke
 
 ```php
 $container = new \Headacke\FactoryContainer();
-$container->set('testing', function ($container) {
-  return 'testing';
-});
+$container->set('testing', $container ==> 'testing');
 $container->get('testing'); // return string
 ```
 
@@ -40,18 +38,14 @@ default *prototype*
 
 ```php
 $container = new \Headacke\FactoryContainer();
-$container->set('scope:singleton', function ($container) {
-  return new \stdClass();
-}, \Headacke\Scope::SINGLETON);
+$container->set('scope:singleton', $container ==> new \stdClass(), \Headacke\Scope::SINGLETON);
 ```
 
 ### PROTOTYPE
 
 ```php
 $container = new \Headacke\FactoryContainer();
-$container->set('scope:prototype', function ($container) {
-  return new \stdClass();
-}, \Headacke\Scope::PROTOTYPE);
+$container->set('scope:prototype', $container ==> new \stdClass(), \Headacke\Scope::PROTOTYPE);
 ```
 
 ## Dependency Injection
@@ -59,9 +53,11 @@ $container->set('scope:prototype', function ($container) {
 ### set parameters
 
 ```php
-$container->parameters(string className, 'parameter name', function ($container) {
-  return 'parameter value';
-});
+$container->parameters(
+  'string className',
+  'parameter name',
+  $container ==> 'parameter value'
+);
 ```
 
 sample class
@@ -88,15 +84,10 @@ final class MessageClient {
 
 ```php
 $container = new \Headacke\FactoryContainer();
-$container->set('message.class', function ($container) {
-  return new MessageClass('testing');
-});
-$container->parameters(MessageClient::class, 'message', function ($container) {
-  return $container->get('message.class');
-});
+$container->set('message.class', $container ==> new MessageClass('testing'));
+$container->parameters(MessageClient::class, 'message', $container ==> $container->get('message.class'));
 $instance = $container->get(MessageClient::class);
 ```
-
 
 ## Use modules
 
@@ -109,10 +100,7 @@ class ExampleModule extends ServiceModule
 {
   public function provide(FactoryContainer $container): void
   {
-    $container->set('example', function ($container) {
-      $class = new \stdClass();
-      return $class;
-    });
+    $container->set('example', $container ==> new \stdClass());
   }
 }
 
