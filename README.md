@@ -1,6 +1,8 @@
 # Headacke
 
-simple light weight service location container
+simple light weight service location / dependency injection container
+
+**H** aed **ack** e
 
 ## Installation
 
@@ -46,6 +48,50 @@ $container->set('scope:prototype', function ($container) {
   return new \stdClass();
 }, \Headacke\Scope::PROTOTYPE);
 ```
+
+## Dependency Injection
+
+### set parameters
+
+```php
+$container->parameters(string className, 'parameter name', function ($container) {
+  return 'parameter value';
+});
+```
+
+sample class
+```php
+final class MessageClass {
+  public function __construct(protected string $message) {
+  }
+  public function message(): string {
+    return $this->message;
+  }
+}
+
+final class MessageClient {
+  public function __construct(protected MessageClass $message) {
+
+  }
+  public function message(): MessageClass {
+    return $this->message;
+  }
+}
+```
+
+### Inject
+
+```php
+$container = new \Headacke\FactoryContainer();
+$container->set('message.class', function ($container) {
+  return new MessageClass('testing');
+});
+$container->parameters(MessageClient::class, 'message', function ($container) {
+  return $container->get('message.class');
+});
+$instance = $container->get(MessageClient::class);
+```
+
 
 ## Use modules
 

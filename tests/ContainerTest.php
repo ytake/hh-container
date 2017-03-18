@@ -67,6 +67,51 @@ class ContainerTest extends \PHPUnit\Framework\TestCase
     $container->lockModule();
     $this->assertInstanceOf(\stdClass::class, $container->get('provide:sample'));
   }
+
+  public function testShouldResolveInstance(): void
+  {
+    $container = new \Headacke\FactoryContainer();
+    $this->assertInstanceOf(\stdClass::class, $container->get(\stdClass::class));
+    $container->parameters(ResolvedObject::class, 'object', function ($container) {
+      return new \stdClass();
+    });
+    $container->parameters(ResolvedObject::class, 'integer', function ($container) {
+      return 100;
+    });
+    $instance = $container->get(ResolvedObject::class);
+    $this->assertInstanceOf(ResolvedObject::class, $instance);
+  }
+
+  public function testShouldResolveConstructorPromotionInstance(): void
+  {
+    $container = new \Headacke\FactoryContainer();
+    $container->parameters(ConstructorPromotionClass::class, 'object', function ($container) {
+      return new \stdClass();
+    });
+    $container->parameters(ConstructorPromotionClass::class, 'integer', function ($container) {
+      return 100;
+    });
+    $instance = $container->get(ConstructorPromotionClass::class);
+    $this->assertInstanceOf(ConstructorPromotionClass::class, $instance);
+    if ($instance instanceof ConstructorPromotionClass) {
+      $this->assertSame(100, $instance->getInteger());
+    }
+  }
+
+  public function testShouldResolveDependencyInjectionWithLocation(): void
+  {
+    $container = new \Headacke\FactoryContainer();
+    $container->set('message.class', function ($container) {
+      return new MockMessageClass('testing');
+    });
+    $container->parameters(MessageClient::class, 'message', function ($container) {
+      return $container->get('message.class');
+    });
+    $instance = $container->get(MessageClient::class);
+    if ($instance instanceof MessageClient) {
+      $this->assertSame('testing', $instance->message()->message());
+    }
+  }
 }
 
 class StubModule extends \Headacke\ServiceModule
@@ -77,5 +122,45 @@ class StubModule extends \Headacke\ServiceModule
       $class = new \stdClass();
       return $class;
     });
+  }
+}
+
+class ResolvedObject
+{
+  private \stdClass $object;
+  private int $integer;
+  public function __construct(\stdClass $object, int $integer = 1)
+  {
+    $this->object = $object;
+    $this->integer = $integer;
+  }
+}
+
+class ConstructorPromotionClass
+{
+  public function __construct(private \stdClass $object, private int $integer)
+  {
+
+  }
+
+  public function getInteger(): int {
+    return $this->integer;
+  }
+}
+
+class MockMessageClass {
+  public function __construct(protected string $message) {
+  }
+  public function message(): string {
+    return $this->message;
+  }
+}
+
+final class MessageClient {
+  public function __construct(protected MockMessageClass $message) {
+
+  }
+  public function message(): MockMessageClass {
+    return $this->message;
   }
 }
