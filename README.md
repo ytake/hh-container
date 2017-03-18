@@ -1,8 +1,12 @@
 # Headacke
 
+<<<<<<< HEAD
 simple light weight service location / dependency injection container
 
 **H** aed **ack** e
+
+[![Build Status](https://travis-ci.org/ytake/headacke.svg?branch=develop
+)](https://travis-ci.org/ytake/headacke)
 
 ## Installation
 
