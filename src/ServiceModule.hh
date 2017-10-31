@@ -15,7 +15,7 @@
  * Copyright (c) 2017 Yuuki Takezawa
  *
  */
-namespace Headacke;
+namespace Ytake\HHContainer;
 
 abstract class ServiceModule
 {

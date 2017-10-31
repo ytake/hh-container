@@ -1,5 +1,5 @@
 {
-  "name": "ytake/headacke",
+  "name": "ytake/hh-container",
   "description": "simple light weight service location / dependency injection container",
   "minimum-stability": "stable",
   "type": "library",
@@ -10,19 +10,23 @@
     "container"
   ],
   "require": {
-    "hhvm": ">=3.11",
-    "facebook/hhvm-autoload": "^1.3.0",
-    "ytake/psr-container-hhi": "~1.0"
+    "hhvm": ">=3.12",
+    "hhvm/hhvm-autoload": "^1.5",
+    "ytake/psr-container-hhi": "^1.0"
   },
   "require-dev": {
     "phpunit/phpunit": "^5.0",
-    "91carriage/phpunit-hhi": "^5.6",
-    "facebook/hhvm-autoload": "`1.3"
+    "91carriage/phpunit-hhi": "^5.7.1"
   },
   "autoload": {
     "psr-4": {
-      "Headacke\\": "src/"
+      "Ytake\\HHContainer\\": "src/"
     }
+  },
+  "autoload-dev": {
+  "classmap": [
+      "tests/"
+    ]
   },
   "scripts": {
     "test": "./vendor/bin/phpunit"

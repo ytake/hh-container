@@ -15,7 +15,7 @@
  * Copyright (c) 2017 Yuuki Takezawa
  *
  */
-namespace Headacke;
+namespace Ytake\HHContainer;
 
 use Closure;
 use Psr\Container\ContainerInterface;
@@ -150,8 +150,10 @@ class FactoryContainer implements ContainerInterface
   {
     if ($parameters = $constructor->getParameters()) {
       foreach ($parameters as $parameter) {
-        if (isset($this->parameters[$id][$parameter->getName()])) {
-          yield call_user_func($this->parameters[$id][$parameter->getName()], $this);
+        if (isset($this->parameters[$id])){
+          if (isset($this->parameters[$id][$parameter->getName()])) {
+            yield call_user_func($this->parameters[$id][$parameter->getName()], $this);
+          }
         }
       }
     }
