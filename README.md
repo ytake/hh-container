@@ -1,31 +1,29 @@
-# Headacke
+# HH-Container
 
 <<<<<<<
 
 simple light weight service location / dependency injection container
 
-**H** ead **ack** e
-
-[![Build Status](https://travis-ci.org/ytake/headacke.svg?branch=develop
-)](https://travis-ci.org/ytake/headacke)
+[![Build Status](https://travis-ci.org/ytake/hh-container.svg?branch=develop
+)](https://travis-ci.org/ytake/hh-container)
 
 ## Installation
 
 ```bash
-$ hhvm --php $(which composer) require ytake/headacke
+$ hhvm --php $(which composer) require ytake/hh-container
 ```
 
 ```json
 "require": {
   "hhvm": ">=3.11.0",
-  "ytake/headacke": "~0.0"
+  "ytake/hh-container": "~0.0"
 },
 ```
 
 ## Usage
 
 ```php
-$container = new \Headacke\FactoryContainer();
+$container = new \Ytake\HHContainer\FactoryContainer();
 $container->set('testing', $container ==> 'testing');
 $container->get('testing'); // return string
 ```
@@ -37,15 +35,15 @@ default *prototype*
 ### SINGLETON
 
 ```php
-$container = new \Headacke\FactoryContainer();
-$container->set('scope:singleton', $container ==> new \stdClass(), \Headacke\Scope::SINGLETON);
+$container = new \Ytake\HHContainer\FactoryContainer();
+$container->set('scope:singleton', $container ==> new \stdClass(), \Ytake\HHContainer\Scope::SINGLETON);
 ```
 
 ### PROTOTYPE
 
 ```php
-$container = new \Headacke\FactoryContainer();
-$container->set('scope:prototype', $container ==> new \stdClass(), \Headacke\Scope::PROTOTYPE);
+$container = new \Ytake\HHContainer\FactoryContainer();
+$container->set('scope:prototype', $container ==> new \stdClass(), \Ytake\HHContainer\Scope::PROTOTYPE);
 ```
 
 ## Dependency Injection
@@ -83,7 +81,7 @@ final class MessageClient {
 ### Inject
 
 ```php
-$container = new \Headacke\FactoryContainer();
+$container = new \Ytake\HHContainer\FactoryContainer();
 $container->set('message.class', $container ==> new MessageClass('testing'));
 $container->parameters(MessageClient::class, 'message', $container ==> $container->get('message.class'));
 $instance = $container->get(MessageClient::class);
@@ -93,8 +91,8 @@ $instance = $container->get(MessageClient::class);
 
 ```php
 
-use Headacke\ServiceModule;
-use Headacke\FactoryContainer;
+use Ytake\HHContainer\ServiceModule;
+use Ytake\HHContainer\FactoryContainer;
 
 class ExampleModule extends ServiceModule
 {
@@ -107,7 +105,7 @@ class ExampleModule extends ServiceModule
 ```
 
 ```php
-$container = new \Headacke\FactoryContainer();
+$container = new \Ytake\HHContainer\FactoryContainer();
 $container->register(ExampleModule::class);
 $container->lockModule();
 ```
