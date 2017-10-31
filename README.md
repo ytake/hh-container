@@ -1,6 +1,7 @@
 # HH-Container
 
-<<<<<<< HEAD
+<<<<<<<
+
 simple light weight service location / dependency injection container
 
 [![Build Status](https://travis-ci.org/ytake/hh-container.svg?branch=develop
