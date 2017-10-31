@@ -4,8 +4,7 @@
 
 simple light weight service location / dependency injection container
 
-[![Build Status](https://travis-ci.org/ytake/hh-container.svg?branch=develop
-)](https://travis-ci.org/ytake/hh-container)
+[![Build Status](https://travis-ci.org/ytake/hh-container.svg?branch=master)](https://travis-ci.org/ytake/hh-container)
 
 ## Installation
 
