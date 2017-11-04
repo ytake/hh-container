@@ -17,7 +17,20 @@
  */
 namespace Ytake\HHContainer;
 
-use Psr\Container\NotFoundExceptionInterface;
+class Invokable {
 
-class NotFoundException extends \Exception
-  implements NotFoundExceptionInterface {}
+  public function __construct(
+    protected mixed $instance,
+    protected string $invokeMethod = '__invoke',
+    protected mixed ...$args
+  ) {
+    if (!is_object($instance)) {
+      throw new \InvalidArgumentException();
+    }
+  }
+
+  public function __invoke(): mixed {
+    $dynamicMethod = $this->invokeMethod;
+    return /* UNSAFE_EXPR */ $this->instance->$dynamicMethod(...$this->args);
+  }
+}

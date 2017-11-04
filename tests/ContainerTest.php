@@ -54,12 +54,17 @@ final class ContainerTest extends \PHPUnit\Framework\TestCase
     $container->get('testing');
   }
 
+  /**
+   * @expectedException \Ytake\HHContainer\NotFoundException
+   */
   public function testShouldReturnProvideInstance(): void
   {
     $container = new \Ytake\HHContainer\FactoryContainer();
     $container->register(StubModule::class);
     $container->lockModule();
     $this->assertInstanceOf(\stdClass::class, $container->get('provide:sample'));
+    $container->set('message.class', $container ==>  new MockMessageClass('testing'));
+    $container->get('message.class');
   }
 
   public function testShouldResolveInstance(): void
