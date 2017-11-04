@@ -14,7 +14,7 @@ $ hhvm --php $(which composer) require ytake/hh-container
 
 ```json
 "require": {
-  "hhvm": ">=3.11.0",
+  "hhvm": ">=3.12.0",
   "ytake/hh-container": "~0.0"
 },
 ```
@@ -84,6 +84,27 @@ $container = new \Ytake\HHContainer\FactoryContainer();
 $container->set('message.class', $container ==> new MessageClass('testing'));
 $container->parameters(MessageClient::class, 'message', $container ==> $container->get('message.class'));
 $instance = $container->get(MessageClient::class);
+```
+
+### callable
+returns the value of a callable with parameters supplied at calltime.
+
+```php
+final class TestingInvokable {
+  public function __invoke(FactoryContainer $container): int {
+    return 1;
+  }
+}
+
+$container = new \Ytake\HHContainer\FactoryContainer();
+$container->set(TestingInvokable::class, $container ==> 
+  $container->callable(
+    new \Ytake\HHContainer\Invokable(
+      new TestingInvokable(), '__invoke', $container
+    )
+  )
+);
+
 ```
 
 ## Use modules

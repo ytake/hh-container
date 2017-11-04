@@ -20,7 +20,7 @@ namespace Ytake\HHContainer;
 use Closure;
 use Psr\Container\ContainerInterface;
 
-enum Scope: int {
+enum Scope : int {
   PROTOTYPE = 0;
   SINGLETON = 1;
 }
@@ -30,28 +30,42 @@ enum Scope: int {
  * not supported autowiring
  * @author yuuki.takezawa<yuuki.takezawa@comnect.jp.net>
  */
-class FactoryContainer implements ContainerInterface
-{
-  protected Map<string, Scope> $scopes = Map{ };
+class FactoryContainer implements ContainerInterface {
 
-  protected Set<string> $modules = Set{ };
+  protected Map<string, Scope> $scopes = Map {};
 
-  protected Map<string, (function(FactoryContainer): mixed)> $bindings = Map{ };
+  protected Set<string> $modules = Set {};
 
-  protected array<string, array<string, (function(FactoryContainer): mixed)>> $parameters = [];
+  protected Map<string, (function(FactoryContainer): mixed)>
+    $bindings = Map {};
+
+  protected array<string, array<string, (function(FactoryContainer): mixed)>>
+    $parameters = [];
+
+  protected bool $locked = false;
 
   /**
    * supported closure only
    */
-  public function set(string $id, (function(FactoryContainer): mixed) $callback, Scope $scope = Scope::PROTOTYPE): void
-  {
-    $this->bindings->add(Pair{$id, $callback});
-    $this->scopes->add(Pair{$id, $scope});
+  public function set(
+    string $id,
+    (function(FactoryContainer): mixed) $callback,
+    Scope $scope = Scope::PROTOTYPE,
+  ): void {
+    if (!$this->locked) {
+      $this->bindings->add(Pair {$id, $callback});
+      $this->scopes->add(Pair {$id, $scope});
+    }
   }
 
-  public function parameters(string $id, string $name, (function(FactoryContainer): mixed) $callback): void
-  {
-    $this->parameters[$id][$name] = $callback;
+  public function parameters(
+    string $id,
+    string $name,
+    (function(FactoryContainer): mixed) $callback,
+  ): void {
+    if (!$this->locked) {
+      $this->parameters[$id][$name] = $callback;
+    }
   }
 
   /**
@@ -64,14 +78,14 @@ class FactoryContainer implements ContainerInterface
    *
    * @return mixed Entry.
    */
-  public function get($id): mixed
-  {
-    if($this->has($id)) {
+  public function get($id): mixed {
+    if ($this->has($id)) {
       $resolved = $this->bindings->get($id);
       if (!is_null($resolved)) {
         if ($this->scopes->get($id) === Scope::SINGLETON) {
           return $this->shared($id);
         }
+
         return call_user_func($resolved, $this);
       }
     }
@@ -82,22 +96,24 @@ class FactoryContainer implements ContainerInterface
       if ($reflectionClass->isInstantiable()) {
         $constructor = $reflectionClass->getConstructor();
         if ($constructor instanceof \ReflectionMethod) {
-          $resolvedParameters = $this->resolveConstructorParameters($id, $constructor);
+          $resolvedParameters =
+            $this->resolveConstructorParameters($id, $constructor);
           if ($resolvedParameters instanceof \Generator) {
             $arguments = iterator_to_array($resolvedParameters);
           }
         }
         return $reflectionClass->newInstanceArgs($arguments);
       }
-    } catch(\ReflectionException $e) {
-      throw new NotFoundException(sprintf('Identifier "%s" is not binding.', $id));
+    } catch (\ReflectionException $e) {
+      throw new NotFoundException(
+        sprintf('Identifier "%s" is not binding.', $id),
+      );
     }
-          throw new ContainerException(sprintf('Error retrieving "%s"', $id));
+    throw new ContainerException(sprintf('Error retrieving "%s"', $id));
   }
 
   <<__Memoize>>
-  protected function shared(string $id): mixed
-  {
+  protected function shared(string $id): mixed {
     return call_user_func($this->bindings->at($id), $this);
   }
 
@@ -112,50 +128,59 @@ class FactoryContainer implements ContainerInterface
    *
    * @return bool
    */
-  public function has($id): bool
-  {
+  public function has($id): bool {
     return $this->bindings->containsKey($id);
   }
 
-  public function bindings(): Map<string, (function(FactoryContainer): mixed)>
-  {
+  public function bindings(
+  ): Map<string, (function(FactoryContainer): mixed)> {
     return $this->bindings;
   }
 
-  public function flush(): void
-  {
+  public function flush(): void {
     $this->bindings->clear();
     $this->scopes->clear();
   }
 
-  public function remove(string $id): void
-  {
-    $this->bindings->removeKey($id);
-    $this->scopes->removeKey($id);
-  }
-
-  public function register(string $moduleClassName): void
-  {
-    $this->modules->add($moduleClassName);
-  }
-
-  public function lockModule(): void
-  {
-    foreach ($this->modules->getIterator() as $iterator) {
-      (new $iterator())->provide($this);
+  public function remove(string $id): void {
+    if (!$this->locked) {
+      $this->bindings->removeKey($id);
+      $this->scopes->removeKey($id);
     }
   }
 
-  protected function resolveConstructorParameters(string $id, \ReflectionMethod $constructor): \Generator
-  {
+  public function register(string $moduleClassName): void {
+    if (!$this->locked) {
+      $this->modules->add($moduleClassName);
+    }
+  }
+
+  public function lockModule(): void {
+    foreach ($this->modules->getIterator() as $iterator) {
+      (new $iterator())->provide($this);
+    }
+    $this->locked = true;
+  }
+
+  protected function resolveConstructorParameters(
+    string $id,
+    \ReflectionMethod $constructor,
+  ): \Generator {
     if ($parameters = $constructor->getParameters()) {
       foreach ($parameters as $parameter) {
-        if (isset($this->parameters[$id])){
+        if (isset($this->parameters[$id])) {
           if (isset($this->parameters[$id][$parameter->getName()])) {
-            yield call_user_func($this->parameters[$id][$parameter->getName()], $this);
+            yield call_user_func(
+              $this->parameters[$id][$parameter->getName()],
+              $this,
+            );
           }
         }
       }
     }
+  }
+
+  public function callable(Invokable $invokable): mixed {
+    return $invokable->__invoke();
   }
 }

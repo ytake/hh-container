@@ -17,8 +17,7 @@
  */
 namespace Ytake\HHContainer;
 
-abstract class ServiceModule
-{
+abstract class ServiceModule {
   /**
    * @param ContainerInterface $container
    */
