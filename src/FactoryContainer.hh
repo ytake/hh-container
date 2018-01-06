@@ -12,7 +12,7 @@
  * This software consists of voluntary contributions made by many individuals
  * and is licensed under the MIT license.
  *
- * Copyright (c) 2017 Yuuki Takezawa
+ * Copyright (c) 2017-2018 Yuuki Takezawa
  *
  */
 namespace Ytake\HHContainer;
@@ -25,6 +25,8 @@ enum Scope : int {
   SINGLETON = 1;
 }
 
+type TServiceModule = classname<ServiceModule>;
+
 /**
  * simple light weight service locator container
  * not supported autowiring
@@ -34,7 +36,7 @@ class FactoryContainer implements ContainerInterface {
 
   protected Map<string, Scope> $scopes = Map {};
 
-  protected Set<string> $modules = Set {};
+  protected Vector<TServiceModule> $modules = Vector {};
 
   protected Map<string, (function(FactoryContainer): mixed)>
     $bindings = Map {};
@@ -91,15 +93,15 @@ class FactoryContainer implements ContainerInterface {
     }
 
     try {
-      $arguments = [];
       $reflectionClass = new \ReflectionClass($id);
       if ($reflectionClass->isInstantiable()) {
+        $arguments = [];
         $constructor = $reflectionClass->getConstructor();
         if ($constructor instanceof \ReflectionMethod) {
           $resolvedParameters =
-            $this->resolveConstructorParameters($id, $constructor);
-          if ($resolvedParameters instanceof \Generator) {
-            $arguments = iterator_to_array($resolvedParameters);
+            \HH\Asio\join($this->resolveConstructorParameters($id, $constructor));
+          if (count($resolvedParameters)) {
+            $arguments = $resolvedParameters;
           }
         }
         return $reflectionClass->newInstanceArgs($arguments);
@@ -110,6 +112,13 @@ class FactoryContainer implements ContainerInterface {
       );
     }
     throw new ContainerException(sprintf('Error retrieving "%s"', $id));
+  }
+
+  protected async function resolveParameters(
+    string $id,
+    \ReflectionMethod $constructor,
+  ) : Awaitable<array<mixed>> {
+    return await $this->resolveConstructorParameters($id, $constructor);
   }
 
   <<__Memoize>>
@@ -149,28 +158,31 @@ class FactoryContainer implements ContainerInterface {
     }
   }
 
-  public function register(string $moduleClassName): void {
+  public function register(TServiceModule $moduleClassName): void {
     if (!$this->locked) {
       $this->modules->add($moduleClassName);
     }
   }
 
   public function lockModule(): void {
-    foreach ($this->modules->getIterator() as $iterator) {
-      (new $iterator())->provide($this);
-    }
+    \HH\Asio\join($this->asyncLockModules());
+  }
+
+  protected async function asyncLockModules(): Awaitable<void> {
+    await $this->asyncRegister();
     $this->locked = true;
   }
 
-  protected function resolveConstructorParameters(
+  protected async function resolveConstructorParameters(
     string $id,
     \ReflectionMethod $constructor,
-  ): \Generator {
+  ): Awaitable<array<mixed>> {
+    $r = [];
     if ($parameters = $constructor->getParameters()) {
       foreach ($parameters as $parameter) {
         if (isset($this->parameters[$id])) {
           if (isset($this->parameters[$id][$parameter->getName()])) {
-            yield call_user_func(
+            $r[] = call_user_func(
               $this->parameters[$id][$parameter->getName()],
               $this,
             );
@@ -178,9 +190,16 @@ class FactoryContainer implements ContainerInterface {
         }
       }
     }
+    return $r;
   }
 
   public function callable(Invokable $invokable): mixed {
-    return $invokable->__invoke();
+    return $invokable->proceed();
+  }
+
+  protected async function asyncRegister(): Awaitable<void> {
+    foreach ($this->modules->getIterator() as $iterator) {
+      (new $iterator())->provide($this);
+    }
   }
 }

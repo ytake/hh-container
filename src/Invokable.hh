@@ -12,7 +12,7 @@
  * This software consists of voluntary contributions made by many individuals
  * and is licensed under the MIT license.
  *
- * Copyright (c) 2017 Yuuki Takezawa
+ * Copyright (c) 2017-2018 Yuuki Takezawa
  *
  */
 namespace Ytake\HHContainer;
@@ -29,7 +29,7 @@ class Invokable {
     }
   }
 
-  public function __invoke(): mixed {
+  public function proceed(): mixed {
     $dynamicMethod = $this->invokeMethod;
     return /* UNSAFE_EXPR */ $this->instance->$dynamicMethod(...$this->args);
   }
