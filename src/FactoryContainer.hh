@@ -98,8 +98,7 @@ class FactoryContainer implements ContainerInterface {
         $arguments = [];
         $constructor = $reflectionClass->getConstructor();
         if ($constructor instanceof \ReflectionMethod) {
-          $resolvedParameters =
-            \HH\Asio\join($this->resolveConstructorParameters($id, $constructor));
+          $resolvedParameters = $this->resolveConstructorParameters($id, $constructor);
           if (count($resolvedParameters)) {
             $arguments = $resolvedParameters;
           }
@@ -114,11 +113,11 @@ class FactoryContainer implements ContainerInterface {
     throw new ContainerException(sprintf('Error retrieving "%s"', $id));
   }
 
-  protected async function resolveParameters(
+  protected function resolveParameters(
     string $id,
     \ReflectionMethod $constructor,
-  ) : Awaitable<array<mixed>> {
-    return await $this->resolveConstructorParameters($id, $constructor);
+  ) : array<mixed> {
+    return $this->resolveConstructorParameters($id, $constructor);
   }
 
   <<__Memoize>>
@@ -149,6 +148,7 @@ class FactoryContainer implements ContainerInterface {
   public function flush(): void {
     $this->bindings->clear();
     $this->scopes->clear();
+    $this->locked = false;
   }
 
   public function remove(string $id): void {
@@ -165,18 +165,16 @@ class FactoryContainer implements ContainerInterface {
   }
 
   public function lockModule(): void {
-    \HH\Asio\join($this->asyncLockModules());
-  }
-
-  protected async function asyncLockModules(): Awaitable<void> {
-    await $this->asyncRegister();
+    foreach ($this->modules->getIterator() as $iterator) {
+      (new $iterator())->provide($this);
+    }
     $this->locked = true;
   }
 
-  protected async function resolveConstructorParameters(
+  protected function resolveConstructorParameters(
     string $id,
     \ReflectionMethod $constructor,
-  ): Awaitable<array<mixed>> {
+  ): array<mixed> {
     $r = [];
     if ($parameters = $constructor->getParameters()) {
       foreach ($parameters as $parameter) {
@@ -195,11 +193,5 @@ class FactoryContainer implements ContainerInterface {
 
   public function callable(Invokable $invokable): mixed {
     return $invokable->proceed();
-  }
-
-  protected async function asyncRegister(): Awaitable<void> {
-    foreach ($this->modules->getIterator() as $iterator) {
-      (new $iterator())->provide($this);
-    }
   }
 }

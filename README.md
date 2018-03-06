@@ -1,7 +1,4 @@
 # HH-Container
-
-<<<<<<<
-
 simple light weight service location / dependency injection container
 
 [![Build Status](https://travis-ci.org/ytake/hh-container.svg?branch=master)](https://travis-ci.org/ytake/hh-container)
@@ -21,7 +18,7 @@ $ hhvm --php $(which composer) require ytake/hh-container
 
 ## Usage
 
-```php
+```hack
 $container = new \Ytake\HHContainer\FactoryContainer();
 $container->set('testing', $container ==> 'testing');
 $container->get('testing'); // return string
@@ -33,14 +30,14 @@ default *prototype*
 
 ### SINGLETON
 
-```php
+```hack
 $container = new \Ytake\HHContainer\FactoryContainer();
 $container->set('scope:singleton', $container ==> new \stdClass(), \Ytake\HHContainer\Scope::SINGLETON);
 ```
 
 ### PROTOTYPE
 
-```php
+```hack
 $container = new \Ytake\HHContainer\FactoryContainer();
 $container->set('scope:prototype', $container ==> new \stdClass(), \Ytake\HHContainer\Scope::PROTOTYPE);
 ```
@@ -49,7 +46,7 @@ $container->set('scope:prototype', $container ==> new \stdClass(), \Ytake\HHCont
 
 ### set parameters
 
-```php
+```hack
 $container->parameters(
   'string className',
   'parameter name',
@@ -58,7 +55,8 @@ $container->parameters(
 ```
 
 sample class
-```php
+
+```hack
 final class MessageClass {
   public function __construct(protected string $message) {
   }
@@ -79,7 +77,7 @@ final class MessageClient {
 
 ### Inject
 
-```php
+```hack
 $container = new \Ytake\HHContainer\FactoryContainer();
 $container->set('message.class', $container ==> new MessageClass('testing'));
 $container->parameters(MessageClient::class, 'message', $container ==> $container->get('message.class'));
@@ -89,7 +87,7 @@ $instance = $container->get(MessageClient::class);
 ### callable
 returns the value of a callable with parameters supplied at calltime.
 
-```php
+```hack
 final class TestingInvokable {
   public function __invoke(FactoryContainer $container): int {
     return 1;
@@ -109,7 +107,7 @@ $container->set(TestingInvokable::class, $container ==>
 
 ## Use modules
 
-```php
+```hack
 
 use Ytake\HHContainer\ServiceModule;
 use Ytake\HHContainer\FactoryContainer;
@@ -124,7 +122,7 @@ class ExampleModule extends ServiceModule
 
 ```
 
-```php
+```hack
 $container = new \Ytake\HHContainer\FactoryContainer();
 $container->register(ExampleModule::class);
 $container->lockModule();
