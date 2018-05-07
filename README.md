@@ -6,7 +6,7 @@ simple light weight service location / dependency injection container
 ## Installation
 
 ```bash
-$ hhvm --php $(which composer) require ytake/hh-container
+$ hhvm $(which composer) require ytake/hh-container
 ```
 
 ```json

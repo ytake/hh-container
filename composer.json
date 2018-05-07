@@ -10,8 +10,8 @@
     "container"
   ],
   "require": {
-    "hhvm": ">=3.12",
-    "hhvm/hhvm-autoload": "^1.5",
+    "hhvm": ">=3.24",
+    "hhvm/hhvm-autoload": "^1.6",
     "ytake/psr-container-hhi": "^1.0"
   },
   "require-dev": {

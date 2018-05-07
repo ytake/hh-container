@@ -1,5 +1,8 @@
 <?hh // strict
 
+use Ytake\HHContainer\FactoryContainer;
+use Ytake\HHContainer\ServiceModule;
+
 final class ContainerTest extends \PHPUnit\Framework\TestCase
 {
   public function testShouldReturnPrimitiveTypes(): void
@@ -91,7 +94,7 @@ final class ContainerTest extends \PHPUnit\Framework\TestCase
 
   public function testShouldResolveDependencyInjectionWithLocation(): void
   {
-    $container = new \Ytake\HHContainer\FactoryContainer();
+    $container = new FactoryContainer();
     $container->set('message.class', $container ==>  new MockMessageClass('testing'));
     $container->parameters(MessageClient::class, 'message', $container ==> $container->get('message.class'));
     $instance = $container->get(MessageClient::class);
@@ -101,11 +104,9 @@ final class ContainerTest extends \PHPUnit\Framework\TestCase
   }
 }
 
-class StubModule extends \Ytake\HHContainer\ServiceModule
-{
-  public function provide(\Ytake\HHContainer\FactoryContainer $container): void
-  {
-    $container->set('provide:sample', $container ==> new \stdClass());
+class StubModule extends ServiceModule {
+  public function provide(FactoryContainer $container): void {
+    $container->set(\stdClass::class, $container ==> new \stdClass());
   }
 }
 

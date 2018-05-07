@@ -19,8 +19,6 @@ namespace Ytake\HHContainer;
 
 <<__ConsistentConstruct>>
 abstract class ServiceModule {
-  /**
-   * @param ContainerInterface $container
-   */
+
   abstract public function provide(FactoryContainer $container): void;
 }
