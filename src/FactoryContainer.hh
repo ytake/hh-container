@@ -83,23 +83,23 @@ class FactoryContainer implements ContainerInterface {
   public function get($id): mixed {
     if ($this->has($id)) {
       $resolved = $this->bindings->get($id);
-      if (!is_null($resolved)) {
+      if (!\is_null($resolved)) {
         if ($this->scopes->get($id) === Scope::SINGLETON) {
           return $this->shared($id);
         }
 
-        return call_user_func($resolved, $this);
+        return \call_user_func($resolved, $this);
       }
     }
 
     try {
       $reflectionClass = new \ReflectionClass($id);
       if ($reflectionClass->isInstantiable()) {
-        $arguments = [];
+        $arguments = Vector{};
         $constructor = $reflectionClass->getConstructor();
         if ($constructor instanceof \ReflectionMethod) {
           $resolvedParameters = $this->resolveConstructorParameters($id, $constructor);
-          if (count($resolvedParameters)) {
+          if ($resolvedParameters->count()) {
             $arguments = $resolvedParameters;
           }
         }
@@ -107,17 +107,10 @@ class FactoryContainer implements ContainerInterface {
       }
     } catch (\ReflectionException $e) {
       throw new NotFoundException(
-        sprintf('Identifier "%s" is not binding.', $id),
+        \sprintf('Identifier "%s" is not binding.', $id),
       );
     }
-    throw new ContainerException(sprintf('Error retrieving "%s"', $id));
-  }
-
-  protected function resolveParameters(
-    string $id,
-    \ReflectionMethod $constructor,
-  ) : array<mixed> {
-    return $this->resolveConstructorParameters($id, $constructor);
+    throw new ContainerException(\sprintf('Error retrieving "%s"', $id));
   }
 
   <<__Memoize>>
@@ -174,16 +167,16 @@ class FactoryContainer implements ContainerInterface {
   protected function resolveConstructorParameters(
     string $id,
     \ReflectionMethod $constructor,
-  ): array<mixed> {
-    $r = [];
+  ): Vector<mixed> {
+    $r = Vector{};
     if ($parameters = $constructor->getParameters()) {
       foreach ($parameters as $parameter) {
         if (isset($this->parameters[$id])) {
           if (isset($this->parameters[$id][$parameter->getName()])) {
-            $r[] = call_user_func(
+            $r->add(call_user_func(
               $this->parameters[$id][$parameter->getName()],
               $this,
-            );
+            ));
           }
         }
       }
