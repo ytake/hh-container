@@ -21,8 +21,8 @@ use Closure;
 use Psr\Container\ContainerInterface;
 
 enum Scope : int {
-  PROTOTYPE = 0;
-  SINGLETON = 1;
+  Prototype = 0;
+  Singleton = 1;
 }
 
 type TServiceModule = classname<ServiceModule>;
@@ -52,7 +52,7 @@ class FactoryContainer implements ContainerInterface {
   public function set(
     string $id,
     (function(FactoryContainer): mixed) $callback,
-    Scope $scope = Scope::PROTOTYPE,
+    Scope $scope = Scope::Prototype,
   ): void {
     if (!$this->locked) {
       $this->bindings->add(Pair {$id, $callback});
@@ -70,28 +70,16 @@ class FactoryContainer implements ContainerInterface {
     }
   }
 
-  /**
-   * Finds an entry of the container by its identifier and returns it.
-   *
-   * @param string $id Identifier of the entry to look for.
-   *
-   * @throws NotFoundExceptionInterface  No entry was found for **this** identifier.
-   * @throws ContainerExceptionInterface Error while retrieving the entry.
-   *
-   * @return mixed Entry.
-   */
   public function get($id): mixed {
     if ($this->has($id)) {
       $resolved = $this->bindings->get($id);
       if (!\is_null($resolved)) {
-        if ($this->scopes->get($id) === Scope::SINGLETON) {
+        if ($this->scopes->get($id) === Scope::Singleton) {
           return $this->shared($id);
         }
-
         return \call_user_func($resolved, $this);
       }
     }
-
     try {
       $reflectionClass = new \ReflectionClass($id);
       if ($reflectionClass->isInstantiable()) {
@@ -118,17 +106,6 @@ class FactoryContainer implements ContainerInterface {
     return call_user_func($this->bindings->at($id), $this);
   }
 
-  /**
-   * Returns true if the container can return an entry for the given identifier.
-   * Returns false otherwise.
-   *
-   * `has($id)` returning true does not mean that `get($id)` will not throw an exception.
-   * It does however mean that `get($id)` will not throw a `NotFoundExceptionInterface`.
-   *
-   * @param string $id Identifier of the entry to look for.
-   *
-   * @return bool
-   */
   public function has($id): bool {
     return $this->bindings->containsKey($id);
   }
@@ -151,7 +128,7 @@ class FactoryContainer implements ContainerInterface {
     }
   }
 
-  public function register(TServiceModule $moduleClassName): void {
+  public function registerModule(TServiceModule $moduleClassName): void {
     if (!$this->locked) {
       $this->modules->add($moduleClassName);
     }
@@ -169,15 +146,14 @@ class FactoryContainer implements ContainerInterface {
     \ReflectionMethod $constructor,
   ): Vector<mixed> {
     $r = Vector{};
-    if ($parameters = $constructor->getParameters()) {
-      foreach ($parameters as $parameter) {
-        if (isset($this->parameters[$id])) {
-          if (isset($this->parameters[$id][$parameter->getName()])) {
-            $r->add(call_user_func(
-              $this->parameters[$id][$parameter->getName()],
-              $this,
-            ));
-          }
+    $parameters = $constructor->getParameters();
+    foreach ($parameters as $parameter) {
+      if (\array_key_exists($id, $this->parameters)) {
+        if (\array_key_exists($parameter->getName(), $this->parameters[$id])) {
+          $r->add(call_user_func(
+            $this->parameters[$id][$parameter->getName()],
+            $this,
+          ));
         }
       }
     }
