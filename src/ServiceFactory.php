@@ -29,13 +29,23 @@ class ServiceFactory {
     $this->factories->add(Pair{$factory->name(), $factory});
   }
 
-  public function resolve(string $factoryName): FactoryInterface::T {
+  public function create(string $factoryName): FactoryInterface::T {
     $resolve = $this->factories->get($factoryName);
     if (!\is_null($resolve)) {
+      if ($resolve->scope() === Scope::Singleton) {
+        return $this->createShared($factoryName);
+      }
       return $resolve->provide($this->container);
     }
     throw new NotFoundException(
       \sprintf('"%s" is not found.', $factoryName),
     );
+  }
+
+  <<__Memoize>>
+  protected function createShared(string $factoryName): FactoryInterface::T {
+    return $this->factories
+      ->at($factoryName)
+      ->provide($this->container);
   }
 }

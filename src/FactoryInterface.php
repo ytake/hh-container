@@ -24,4 +24,6 @@ interface FactoryInterface {
   public function provide(FactoryContainer $container): this::T;
 
   public function name(): string;
+
+  public function scope(): Scope;
 }

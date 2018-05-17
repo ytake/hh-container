@@ -2,13 +2,20 @@
 
 use Ytake\HHContainer\FactoryContainer;
 use Ytake\HHContainer\ServiceModule;
+use Ytake\HHContainer\Definition\{
+  StringDefinition,
+  MixedDefintion
+};
 
 final class ContainerTest extends \PHPUnit\Framework\TestCase
 {
   public function testShouldReturnPrimitiveTypes(): void
   {
     $container = new \Ytake\HHContainer\FactoryContainer();
-    $container->set('testing', $container ==> 'testing');
+    $container->set(
+      'testing', 
+      $container ==> 'testing'
+    );
     $this->assertSame('testing', $container->get('testing'));
 
     $container->set('testing123', $container ==> 1);

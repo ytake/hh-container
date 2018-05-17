@@ -26,6 +26,7 @@ enum Scope : int {
 }
 
 type TServiceModule = classname<ServiceModule>;
+type TCallable = (function(FactoryContainer): mixed);
 
 /**
  * simple light weight service locator container
@@ -34,36 +35,29 @@ type TServiceModule = classname<ServiceModule>;
  */
 class FactoryContainer implements ContainerInterface {
 
-  protected Map<string, Scope> $scopes = Map {};
-
   protected Vector<TServiceModule> $modules = Vector {};
-
-  protected Map<string, (function(FactoryContainer): mixed)>
-    $bindings = Map {};
-
-  protected array<string, array<string, (function(FactoryContainer): mixed)>>
+  
+  protected array<string, array<string, TCallable>>
     $parameters = [];
 
   protected bool $locked = false;
 
-  /**
-   * supported closure only
-   */
+  protected Map<string, Map<Scope, TCallable>> $mapper = Map{};
+
   public function set(
     string $id,
-    (function(FactoryContainer): mixed) $callback,
+    TCallable $callback,
     Scope $scope = Scope::Prototype,
   ): void {
     if (!$this->locked) {
-      $this->bindings->add(Pair {$id, $callback});
-      $this->scopes->add(Pair {$id, $scope});
+      $this->mapper->add(Pair {$id, Map{$scope => $callback}});
     }
   }
 
   public function parameters(
     string $id,
     string $name,
-    (function(FactoryContainer): mixed) $callback,
+    TCallable $callback,
   ): void {
     if (!$this->locked) {
       $this->parameters[$id][$name] = $callback;
@@ -72,12 +66,12 @@ class FactoryContainer implements ContainerInterface {
 
   public function get($id): mixed {
     if ($this->has($id)) {
-      $resolved = $this->bindings->get($id);
+      $resolved = $this->mapper->get($id);
       if (!\is_null($resolved)) {
-        if ($this->scopes->get($id) === Scope::Singleton) {
+        if ($resolved->firstKey() === Scope::Singleton) {
           return $this->shared($id);
         }
-        return \call_user_func($resolved, $this);
+        return \call_user_func($resolved->firstValue(), $this);
       }
     }
     try {
@@ -103,28 +97,30 @@ class FactoryContainer implements ContainerInterface {
 
   <<__Memoize>>
   protected function shared(string $id): mixed {
-    return call_user_func($this->bindings->at($id), $this);
+    $shared = $this->mapper->at($id);
+    $call = $shared->firstValue();
+    if(!\is_null($call)) {
+      return call_user_func($call, $this);
+    }
   }
 
   public function has($id): bool {
-    return $this->bindings->containsKey($id);
+    return $this->mapper->containsKey($id);
   }
 
   public function bindings(
-  ): Map<string, (function(FactoryContainer): mixed)> {
-    return $this->bindings;
+  ): ImmMap<string, Map<Scope, TCallable>> {
+    return $this->mapper->toImmMap();
   }
 
   public function flush(): void {
-    $this->bindings->clear();
-    $this->scopes->clear();
+    $this->mapper->clear();
     $this->locked = false;
   }
 
   public function remove(string $id): void {
     if (!$this->locked) {
-      $this->bindings->removeKey($id);
-      $this->scopes->removeKey($id);
+      $this->mapper->removeKey($id);
     }
   }
 
@@ -134,11 +130,11 @@ class FactoryContainer implements ContainerInterface {
     }
   }
 
-  public function lockModule(): void {
-    foreach ($this->modules->getIterator() as $iterator) {
-      (new $iterator())->provide($this);
-    }
+  public function lockModule(): Iterator<void> {
     $this->locked = true;
+    foreach ($this->modules->getIterator() as $iterator) {
+      yield (new $iterator())->provide($this);
+    }
   }
 
   protected function resolveConstructorParameters(

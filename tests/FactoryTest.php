@@ -1,5 +1,6 @@
 <?hh // strict
 
+use Ytake\HHContainer\Scope;
 use Ytake\HHContainer\ServiceFactory;
 use Ytake\HHContainer\FactoryContainer;
 use Ytake\HHContainer\FactoryInterface;
@@ -10,14 +11,15 @@ class FactoryTest extends \PHPUnit\Framework\TestCase
   {
     $factory = new ServiceFactory(new FactoryContainer());
     $factory->registerFactory(new StringFactory());
-    $this->assertSame('testing', $factory->resolve('stringer'));
+    $this->assertSame('testing', $factory->create('stringer'));
   }
 
   public function testShouldReturnStdClass(): void
   {
     $factory = new ServiceFactory(new FactoryContainer());
     $factory->registerFactory(new StdClassFactory());
-    $this->assertInstanceOf(\stdClass::class, $factory->resolve(\stdClass::class));
+    $this->assertInstanceOf(\stdClass::class, $factory->create(\stdClass::class));
+    $this->assertSame($factory->create(\stdClass::class), $factory->create(\stdClass::class));
   }
 }
 
@@ -30,6 +32,9 @@ class StringFactory implements FactoryInterface {
   public function name(): string {
     return 'stringer';
   }
+  public function scope(): Scope {
+    return Scope::Singleton;
+  }
 }
 
 class StdClassFactory implements FactoryInterface {
@@ -40,5 +45,8 @@ class StdClassFactory implements FactoryInterface {
 
   public function name(): string {
     return 'stdClass';
+  }
+  public function scope(): Scope {
+    return Scope::Singleton;
   }
 }
