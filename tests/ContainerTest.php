@@ -1,14 +1,17 @@
 <?hh // strict
 
-use Ytake\HHContainer\FactoryContainer;
-use Ytake\HHContainer\ServiceModule;
+use type Ytake\HHContainer\FactoryContainer;
+use type Ytake\HHContainer\ServiceModule;
 
 final class ContainerTest extends \PHPUnit\Framework\TestCase
 {
   public function testShouldReturnPrimitiveTypes(): void
   {
     $container = new \Ytake\HHContainer\FactoryContainer();
-    $container->set('testing', $container ==> 'testing');
+    $container->set(
+      'testing',
+      $container ==> 'testing'
+    );
     $this->assertSame('testing', $container->get('testing'));
 
     $container->set('testing123', $container ==> 1);
@@ -24,7 +27,7 @@ final class ContainerTest extends \PHPUnit\Framework\TestCase
     $container->set(
       'testing:testing',
       $container ==> new \stdClass(),
-      \Ytake\HHContainer\Scope::SINGLETON
+      \Ytake\HHContainer\Scope::Singleton
     );
     $this->assertInstanceOf(\stdClass::class, $container->get('testing:testing'));
     $this->assertSame($container->get('testing:testing'), $container->get('testing:testing'));
@@ -33,7 +36,7 @@ final class ContainerTest extends \PHPUnit\Framework\TestCase
   public function testShouldReturnPrototypeObject(): void
   {
     $container = new \Ytake\HHContainer\FactoryContainer();
-    $container->set('testing:testing', $container ==> new \stdClass(), \Ytake\HHContainer\Scope::PROTOTYPE);
+    $container->set('testing:testing', $container ==> new \stdClass(), \Ytake\HHContainer\Scope::Prototype);
     $this->assertInstanceOf(\stdClass::class, $container->get('testing:testing'));
     $this->assertNotSame($container->get('testing:testing'), $container->get('testing:testing'));
   }
@@ -45,7 +48,7 @@ final class ContainerTest extends \PHPUnit\Framework\TestCase
       $container->set(
         'testing:testing',
         $container ==> $container->get('testing'),
-        \Ytake\HHContainer\Scope::PROTOTYPE
+        \Ytake\HHContainer\Scope::Prototype
       );
       $this->assertSame(1, $container->get('testing:testing'));
   }
@@ -63,7 +66,7 @@ final class ContainerTest extends \PHPUnit\Framework\TestCase
   public function testShouldReturnProvideInstance(): void
   {
     $container = new \Ytake\HHContainer\FactoryContainer();
-    $container->register(StubModule::class);
+    $container->registerModule(StubModule::class);
     $container->lockModule();
     $this->assertInstanceOf(\stdClass::class, $container->get('provide:sample'));
     $container->set('message.class', $container ==>  new MockMessageClass('testing'));
@@ -105,6 +108,7 @@ final class ContainerTest extends \PHPUnit\Framework\TestCase
 }
 
 class StubModule extends ServiceModule {
+  <<__Override>>
   public function provide(FactoryContainer $container): void {
     $container->set(\stdClass::class, $container ==> new \stdClass());
   }

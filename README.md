@@ -11,8 +11,8 @@ $ hhvm $(which composer) require ytake/hh-container
 
 ```json
 "require": {
-  "hhvm": ">=3.12.0",
-  "ytake/hh-container": "~0.0"
+  "hhvm": ">=3.24",
+  "ytake/hh-container": "^1.0"
 },
 ```
 
@@ -32,14 +32,14 @@ default *prototype*
 
 ```hack
 $container = new \Ytake\HHContainer\FactoryContainer();
-$container->set('scope:singleton', $container ==> new \stdClass(), \Ytake\HHContainer\Scope::SINGLETON);
+$container->set('scope:singleton', $container ==> new \stdClass(), \Ytake\HHContainer\Scope::Singleton);
 ```
 
 ### PROTOTYPE
 
 ```hack
 $container = new \Ytake\HHContainer\FactoryContainer();
-$container->set('scope:prototype', $container ==> new \stdClass(), \Ytake\HHContainer\Scope::PROTOTYPE);
+$container->set('scope:prototype', $container ==> new \stdClass(), \Ytake\HHContainer\Scope::Prototype);
 ```
 
 ## Dependency Injection
@@ -126,4 +126,32 @@ class ExampleModule extends ServiceModule
 $container = new \Ytake\HHContainer\FactoryContainer();
 $container->register(ExampleModule::class);
 $container->lockModule();
+```
+
+## Service Factory
+
+```hack
+use Ytake\HHContainer\Scope;
+use Ytake\HHContainer\ServiceFactory;
+use Ytake\HHContainer\FactoryContainer;
+use Ytake\HHContainer\FactoryInterface;
+
+final class StdClassFactory implements FactoryInterface {
+  const type T = stdClass;
+  public function provide(FactoryContainer $container): this::T {
+    return new \stdClass();
+  }
+
+  public function name(): string {
+    return 'stdClass';
+  }
+
+  public function scope(): Scope {
+    return Scope::Singleton;
+  }
+}
+
+$factory = new ServiceFactory(new FactoryContainer());
+$factory->registerFactory(new StdClassFactory());
+$factory->create(\stdClass::class);
 ```

@@ -17,7 +17,11 @@
  */
 namespace Ytake\HHContainer;
 
-use Psr\Container\ContainerExceptionInterface;
+interface FactoryInterface {
 
-class ContainerException extends \Exception
-  implements ContainerExceptionInterface {}
+  abstract const type T;
+
+  public function provide(FactoryContainer $container): this::T;
+
+  public function scope(): Scope;
+}
