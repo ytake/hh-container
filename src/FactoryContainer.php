@@ -17,8 +17,7 @@
  */
 namespace Ytake\HHContainer;
 
-use Closure;
-use Psr\Container\ContainerInterface;
+use type Psr\Container\ContainerInterface;
 
 enum Scope : int {
   Prototype = 0;
@@ -36,7 +35,7 @@ type TCallable = (function(FactoryContainer): mixed);
 class FactoryContainer implements ContainerInterface {
 
   protected Vector<TServiceModule> $modules = Vector {};
-  
+
   protected array<string, array<string, TCallable>>
     $parameters = [];
 

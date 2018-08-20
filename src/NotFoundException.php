@@ -17,7 +17,7 @@
  */
 namespace Ytake\HHContainer;
 
-use Psr\Container\NotFoundExceptionInterface;
+use type Psr\Container\NotFoundExceptionInterface;
 
 class NotFoundException extends \Exception
   implements NotFoundExceptionInterface {}

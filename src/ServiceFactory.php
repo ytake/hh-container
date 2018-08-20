@@ -17,6 +17,11 @@
  */
 namespace Ytake\HHContainer;
 
+use function is_null;
+use function sprintf;
+use function get_class;
+type FactoryType = classname<FactoryInterface>;
+
 class ServiceFactory {
 
   protected Map<string, FactoryInterface> $factories = Map{};
@@ -26,24 +31,24 @@ class ServiceFactory {
   ) {}
 
   public function registerFactory(FactoryInterface $factory): void {
-    $this->factories->add(Pair{$factory->name(), $factory});
+    $this->factories->add(Pair{get_class($factory), $factory});
   }
 
-  public function create(string $factoryName): FactoryInterface::T {
+  public function create(FactoryType $factoryName): FactoryType::T {
     $resolve = $this->factories->get($factoryName);
-    if (!\is_null($resolve)) {
+    if (!is_null($resolve)) {
       if ($resolve->scope() === Scope::Singleton) {
         return $this->createShared($factoryName);
       }
       return $resolve->provide($this->container);
     }
     throw new NotFoundException(
-      \sprintf('"%s" is not found.', $factoryName),
+      sprintf('"%s" is not found.', $factoryName),
     );
   }
 
   <<__Memoize>>
-  protected function createShared(string $factoryName): FactoryInterface::T {
+  protected function createShared(FactoryType $factoryName): FactoryType::T {
     return $this->factories
       ->at($factoryName)
       ->provide($this->container);

@@ -1,7 +1,7 @@
 <?hh // strict
 
-use Ytake\HHContainer\Invokable;
-use Ytake\HHContainer\FactoryContainer;
+use type Ytake\HHContainer\Invokable;
+use type Ytake\HHContainer\FactoryContainer;
 
 class InvokableTest extends \PHPUnit\Framework\TestCase
 {
@@ -9,12 +9,12 @@ class InvokableTest extends \PHPUnit\Framework\TestCase
   {
     $container = new \Ytake\HHContainer\FactoryContainer();
     $container->set(
-      TestingInvokable::class, 
+      TestingInvokable::class,
       $container ==>
         $container->callable(new Invokable(new TestingInvokable(), '__invoke', $container))
     );
     $container->set(
-      TestingInvokableTwo::class, 
+      TestingInvokableTwo::class,
       $container ==>
         $container->callable(new Invokable(new TestingInvokableTwo(), 'execute'))
     );
@@ -24,7 +24,7 @@ class InvokableTest extends \PHPUnit\Framework\TestCase
 }
 
 final class TestingInvokable {
-  public function __invoke(FactoryContainer $container): int {
+  public function __invoke(FactoryContainer $_container): int {
     return 1;
   }
 }

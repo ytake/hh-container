@@ -1,11 +1,7 @@
 <?hh // strict
 
-use Ytake\HHContainer\FactoryContainer;
-use Ytake\HHContainer\ServiceModule;
-use Ytake\HHContainer\Definition\{
-  StringDefinition,
-  MixedDefintion
-};
+use type Ytake\HHContainer\FactoryContainer;
+use type Ytake\HHContainer\ServiceModule;
 
 final class ContainerTest extends \PHPUnit\Framework\TestCase
 {
@@ -13,7 +9,7 @@ final class ContainerTest extends \PHPUnit\Framework\TestCase
   {
     $container = new \Ytake\HHContainer\FactoryContainer();
     $container->set(
-      'testing', 
+      'testing',
       $container ==> 'testing'
     );
     $this->assertSame('testing', $container->get('testing'));
