@@ -1,6 +1,6 @@
 <?hh // strict
 
-use type Ytake\HHContainer\Invokable;
+use type Ytake\HHContainer\MethodCaller;
 use type Ytake\HHContainer\FactoryContainer;
 
 class InvokableTest extends \PHPUnit\Framework\TestCase
@@ -11,12 +11,12 @@ class InvokableTest extends \PHPUnit\Framework\TestCase
     $container->set(
       TestingInvokable::class,
       $container ==>
-        $container->callable(new Invokable(new TestingInvokable(), '__invoke', $container))
+        $container->callable(new MethodCaller(new TestingInvokable(), '__invoke', $container))
     );
     $container->set(
       TestingInvokableTwo::class,
       $container ==>
-        $container->callable(new Invokable(new TestingInvokableTwo(), 'execute'))
+        $container->callable(new MethodCaller(new TestingInvokableTwo(), 'execute'))
     );
     $this->assertSame(1, $container->get(TestingInvokable::class));
     $this->assertSame('testing', $container->get(TestingInvokableTwo::class));

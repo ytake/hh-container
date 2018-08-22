@@ -15,9 +15,10 @@
  * Copyright (c) 2017-2018 Yuuki Takezawa
  *
  */
+
 namespace Ytake\HHContainer;
 
-class Invokable {
+class MethodCaller implements MethodCallIntreface {
 
   public function __construct(
     protected mixed $instance,

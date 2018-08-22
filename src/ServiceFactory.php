@@ -19,8 +19,6 @@ namespace Ytake\HHContainer;
 
 use function is_null;
 use function sprintf;
-use function get_class;
-type FactoryType = classname<FactoryInterface>;
 
 class ServiceFactory {
 
@@ -31,10 +29,10 @@ class ServiceFactory {
   ) {}
 
   public function registerFactory(FactoryInterface $factory): void {
-    $this->factories->add(Pair{get_class($factory), $factory});
+    $this->factories->add(Pair{$factory->name(), $factory});
   }
 
-  public function create(FactoryType $factoryName): FactoryType::T {
+  public function create(string $factoryName): FactoryInterface::T {
     $resolve = $this->factories->get($factoryName);
     if (!is_null($resolve)) {
       if ($resolve->scope() === Scope::Singleton) {
@@ -48,7 +46,7 @@ class ServiceFactory {
   }
 
   <<__Memoize>>
-  protected function createShared(FactoryType $factoryName): FactoryType::T {
+  protected function createShared(string $factoryName): FactoryInterface::T {
     return $this->factories
       ->at($factoryName)
       ->provide($this->container);
