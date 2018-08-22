@@ -136,22 +136,21 @@ use Ytake\HHContainer\ServiceFactory;
 use Ytake\HHContainer\FactoryContainer;
 use Ytake\HHContainer\FactoryInterface;
 
-final class StdClassFactory implements FactoryInterface {
-  const type T = stdClass;
-  public function provide(FactoryContainer $container): this::T {
-    return new \stdClass();
+class StringFactory implements FactoryInterface {
+  const type T = string;
+  public function provide(FactoryContainer $_container): StringFactory::T {
+    return 'testing';
+  }
+  public function scope(): Scope {
+    return Scope::Singleton;
   }
 
   public function name(): string {
-    return 'stdClass';
-  }
-
-  public function scope(): Scope {
-    return Scope::Singleton;
+    return 'testing'
   }
 }
 
 $factory = new ServiceFactory(new FactoryContainer());
-$factory->registerFactory(new StdClassFactory());
-$factory->create(\stdClass::class);
+$factory->registerFactory(new StringFactory());
+$factory->create('testing');
 ```

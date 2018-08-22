@@ -27,6 +27,11 @@ enum Scope : int {
 type TServiceModule = classname<ServiceModule>;
 type TCallable = (function(FactoryContainer): mixed);
 
+use function is_null;
+use function call_user_func;
+use function sprintf;
+use function array_key_exists;
+
 /**
  * simple light weight service locator container
  * not supported autowiring
@@ -66,11 +71,14 @@ class FactoryContainer implements ContainerInterface {
   public function get($id): mixed {
     if ($this->has($id)) {
       $resolved = $this->mapper->get($id);
-      if (!\is_null($resolved)) {
+      if (!is_null($resolved)) {
         if ($resolved->firstKey() === Scope::Singleton) {
           return $this->shared($id);
         }
-        return \call_user_func($resolved->firstValue(), $this);
+        $callable = $resolved->firstValue();
+        if ($callable) {
+          return call_user_func($callable, $this);
+        }
       }
     }
     try {
@@ -88,17 +96,17 @@ class FactoryContainer implements ContainerInterface {
       }
     } catch (\ReflectionException $e) {
       throw new NotFoundException(
-        \sprintf('Identifier "%s" is not binding.', $id),
+        sprintf('Identifier "%s" is not binding.', $id),
       );
     }
-    throw new ContainerException(\sprintf('Error retrieving "%s"', $id));
+    throw new ContainerException(sprintf('Error retrieving "%s"', $id));
   }
 
   <<__Memoize>>
   protected function shared(string $id): mixed {
     $shared = $this->mapper->at($id);
     $call = $shared->firstValue();
-    if(!\is_null($call)) {
+    if(!is_null($call)) {
       return call_user_func($call, $this);
     }
   }
@@ -129,11 +137,11 @@ class FactoryContainer implements ContainerInterface {
     }
   }
 
-  public function lockModule(): Iterator<void> {
-    $this->locked = true;
+  public function lockModule(): void {
     foreach ($this->modules->getIterator() as $iterator) {
-      yield (new $iterator())->provide($this);
+      (new $iterator())->provide($this);
     }
+    $this->locked = true;
   }
 
   protected function resolveConstructorParameters(
@@ -143,8 +151,8 @@ class FactoryContainer implements ContainerInterface {
     $r = Vector{};
     $parameters = $constructor->getParameters();
     foreach ($parameters as $parameter) {
-      if (\array_key_exists($id, $this->parameters)) {
-        if (\array_key_exists($parameter->getName(), $this->parameters[$id])) {
+      if (array_key_exists($id, $this->parameters)) {
+        if (array_key_exists($parameter->getName(), $this->parameters[$id])) {
           $r->add(call_user_func(
             $this->parameters[$id][$parameter->getName()],
             $this,
@@ -155,7 +163,7 @@ class FactoryContainer implements ContainerInterface {
     return $r;
   }
 
-  public function callable(Invokable $invokable): mixed {
+  public function callable(MethodCallIntreface $invokable): mixed {
     return $invokable->proceed();
   }
 }

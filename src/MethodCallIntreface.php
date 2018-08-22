@@ -15,15 +15,10 @@
  * Copyright (c) 2017-2018 Yuuki Takezawa
  *
  */
+
 namespace Ytake\HHContainer;
 
-interface FactoryInterface {
+interface MethodCallIntreface {
 
-  abstract const type T;
-
-  public function provide(FactoryContainer $container): this::T;
-
-  public function scope(): Scope;
-
-  public function name(): string;
+  public function proceed(): mixed;
 }
