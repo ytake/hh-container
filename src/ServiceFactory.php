@@ -35,7 +35,7 @@ class ServiceFactory {
   public function create(string $factoryName): FactoryInterface::T {
     $resolve = $this->factories->get($factoryName);
     if (!is_null($resolve)) {
-      if ($resolve->scope() === Scope::Singleton) {
+      if ($resolve->scope() === Scope::SINGLETON) {
         return $this->createShared($factoryName);
       }
       return $resolve->provide($this->container);
