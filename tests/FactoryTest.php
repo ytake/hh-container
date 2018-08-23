@@ -37,7 +37,7 @@ class StringFactory implements FactoryInterface {
     return 'testing';
   }
   public function scope(): Scope {
-    return Scope::Singleton;
+    return Scope::SINGLETON;
   }
 }
 
@@ -49,7 +49,7 @@ class MockClassFactory implements FactoryInterface {
   }
 
   public function scope(): Scope {
-    return Scope::Singleton;
+    return Scope::SINGLETON;
   }
 
   public function name(): string {

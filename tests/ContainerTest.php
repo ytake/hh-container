@@ -27,7 +27,7 @@ final class ContainerTest extends \PHPUnit\Framework\TestCase
     $container->set(
       'testing:testing',
       $container ==> new \stdClass(),
-      \Ytake\HHContainer\Scope::Singleton
+      \Ytake\HHContainer\Scope::SINGLETON
     );
     $this->assertInstanceOf(\stdClass::class, $container->get('testing:testing'));
     $this->assertSame($container->get('testing:testing'), $container->get('testing:testing'));
@@ -36,7 +36,7 @@ final class ContainerTest extends \PHPUnit\Framework\TestCase
   public function testShouldReturnPrototypeObject(): void
   {
     $container = new \Ytake\HHContainer\FactoryContainer();
-    $container->set('testing:testing', $container ==> new \stdClass(), \Ytake\HHContainer\Scope::Prototype);
+    $container->set('testing:testing', $container ==> new \stdClass(), \Ytake\HHContainer\Scope::PROTOTYPE);
     $this->assertInstanceOf(\stdClass::class, $container->get('testing:testing'));
     $this->assertNotSame($container->get('testing:testing'), $container->get('testing:testing'));
   }
@@ -48,7 +48,7 @@ final class ContainerTest extends \PHPUnit\Framework\TestCase
       $container->set(
         'testing:testing',
         $container ==> $container->get('testing'),
-        \Ytake\HHContainer\Scope::Prototype
+        \Ytake\HHContainer\Scope::PROTOTYPE
       );
       $this->assertSame(1, $container->get('testing:testing'));
   }

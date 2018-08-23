@@ -20,8 +20,8 @@ namespace Ytake\HHContainer;
 use type Psr\Container\ContainerInterface;
 
 enum Scope : int {
-  Prototype = 0;
-  Singleton = 1;
+  PROTOTYPE = 0;
+  SINGLETON = 1;
 }
 
 type TServiceModule = classname<ServiceModule>;
@@ -51,7 +51,7 @@ class FactoryContainer implements ContainerInterface {
   public function set(
     string $id,
     TCallable $callback,
-    Scope $scope = Scope::Prototype,
+    Scope $scope = Scope::PROTOTYPE,
   ): void {
     if (!$this->locked) {
       $this->mapper->add(Pair {$id, Map{$scope => $callback}});
@@ -72,7 +72,7 @@ class FactoryContainer implements ContainerInterface {
     if ($this->has($id)) {
       $resolved = $this->mapper->get($id);
       if (!is_null($resolved)) {
-        if ($resolved->firstKey() === Scope::Singleton) {
+        if ($resolved->firstKey() === Scope::SINGLETON) {
           return $this->shared($id);
         }
         $callable = $resolved->firstValue();
