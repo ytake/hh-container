@@ -20,10 +20,12 @@ namespace Ytake\HHContainer;
 interface FactoryInterface {
 
   abstract const type T;
-
+  
   public function provide(FactoryContainer $container): this::T;
-
+  
+  <<__Rx>>
   public function scope(): Scope;
-
+  
+  <<__Rx>>
   public function name(): string;
 }

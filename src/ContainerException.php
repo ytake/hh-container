@@ -19,5 +19,5 @@ namespace Ytake\HHContainer;
 
 use type Psr\Container\ContainerExceptionInterface;
 
-class ContainerException extends \Exception
+final class ContainerException extends \Exception
   implements ContainerExceptionInterface {}

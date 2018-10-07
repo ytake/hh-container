@@ -19,26 +19,35 @@ namespace Ytake\HHContainer;
 
 use function is_null;
 use function sprintf;
+use function array_key_exists;
 
 class ServiceFactory {
 
-  protected Map<string, FactoryInterface> $factories = Map{};
+  protected dict<string, FactoryInterface> $factories = dict[];
 
   public function __construct(
     protected FactoryContainer $container
   ) {}
-
+  
+  <<__Rx, __Mutable>>
   public function registerFactory(FactoryInterface $factory): void {
-    $this->factories->add(Pair{$factory->name(), $factory});
+    $this->factories[$factory->name()] = $factory;
+  }
+  
+  <<__Rx, __Mutable>>
+  public function has(string $factoryName): bool {
+    return array_key_exists($factoryName, $this->factories);
   }
 
   public function create(string $factoryName): FactoryInterface::T {
-    $resolve = $this->factories->get($factoryName);
-    if (!is_null($resolve)) {
-      if ($resolve->scope() === Scope::SINGLETON) {
-        return $this->createShared($factoryName);
+    if ($this->has($factoryName)) {
+      $resolve = $this->factories[$factoryName];
+      if (!is_null($resolve)) {
+        if ($resolve->scope() === Scope::SINGLETON) {
+          return $this->createShared($factoryName);
+        }
+        return $resolve->provide($this->container);
       }
-      return $resolve->provide($this->container);
     }
     throw new NotFoundException(
       sprintf('"%s" is not found.', $factoryName),
@@ -47,8 +56,7 @@ class ServiceFactory {
 
   <<__Memoize>>
   protected function createShared(string $factoryName): FactoryInterface::T {
-    return $this->factories
-      ->at($factoryName)
+    return $this->factories[$factoryName]
       ->provide($this->container);
   }
 }

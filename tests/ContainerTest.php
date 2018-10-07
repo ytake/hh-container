@@ -58,10 +58,15 @@ final class ContainerTest extends HackTest {
   }
 
   <<ExpectedException(NotFoundException::class)>>
+  public function testShouldThrowNotFoundException() :void {
+    $container = new \Ytake\HHContainer\FactoryContainer();
+    expect($container->get(\stdClass::class))->toBeInstanceOf(\stdClass::class);
+  }
+
+  <<ExpectedException(NotFoundException::class)>>
   public function testShouldReturnProvideInstance(): void {
     $container = new \Ytake\HHContainer\FactoryContainer();
     $container->registerModule(StubModule::class);
-    $container->lockModule();
     expect($container->get('provide:sample'))->toBeInstanceOf(\stdClass::class);
     $container->set('message.class', $container ==>  new MockMessageClass('testing'));
     expect($container->get('message.class'))->toBeInstanceOf(MockMessageClass::class);
@@ -69,17 +74,18 @@ final class ContainerTest extends HackTest {
 
   public function testShouldResolveInstance(): void {
     $container = new \Ytake\HHContainer\FactoryContainer();
-    expect($container->get(\stdClass::class))->toBeInstanceOf(\stdClass::class);
-    $container->parameters(ResolvedObject::class, 'object', $container ==> new \stdClass());
-    $container->parameters(ResolvedObject::class, 'integer', $container ==> 100);
+    $container->set(ResolvedObject::class, $container ==> {
+      return new ResolvedObject(new \stdClass(), 100);
+    });
     $instance = $container->get(ResolvedObject::class);
     expect($instance)->toBeInstanceOf(ResolvedObject::class);
   }
 
   public function testShouldResolveConstructorPromotionInstance(): void {
     $container = new \Ytake\HHContainer\FactoryContainer();
-    $container->parameters(ConstructorPromotionClass::class, 'object', $container ==> new \stdClass());
-    $container->parameters(ConstructorPromotionClass::class, 'integer', $container ==> 100);
+    $container->set(ConstructorPromotionClass::class, $container ==> {
+      return new ConstructorPromotionClass(new \stdClass(), 100, );
+    });
     $instance = $container->get(ConstructorPromotionClass::class);
     expect($instance)->toBeInstanceOf(ConstructorPromotionClass::class);
     if ($instance instanceof ConstructorPromotionClass) {
@@ -90,7 +96,11 @@ final class ContainerTest extends HackTest {
   public function testShouldResolveDependencyInjectionWithLocation(): void {
     $container = new FactoryContainer();
     $container->set('message.class', $container ==>  new MockMessageClass('testing'));
-    $container->parameters(MessageClient::class, 'message', $container ==> $container->get('message.class'));
+    $container->set(MessageClient::class, $container ==> {
+      $instance = $container->get('message.class');
+      invariant($instance instanceof MockMessageClass, 'error');
+      new MessageClient($instance);
+    });
     $instance = $container->get(MessageClient::class);
     if ($instance instanceof MessageClient) {
       expect($instance->message()->message())->toBeSame('testing');
@@ -105,23 +115,23 @@ class StubModule extends ServiceModule {
   }
 }
 
-class ResolvedObject
-{
+class ResolvedObject {
   private \stdClass $object;
   private int $integer;
-  public function __construct(\stdClass $object, int $integer = 1)
-  {
+  public function __construct(
+    \stdClass $object, 
+    int $integer = 1
+  ) {
     $this->object = $object;
     $this->integer = $integer;
   }
 }
 
-class ConstructorPromotionClass
-{
-  public function __construct(private \stdClass $object, private int $integer)
-  {
-
-  }
+class ConstructorPromotionClass {
+  public function __construct(
+    private \stdClass $object,
+    private int $integer
+  ) {}
 
   public function getInteger(): int {
     return $this->integer;
@@ -129,17 +139,20 @@ class ConstructorPromotionClass
 }
 
 class MockMessageClass {
-  public function __construct(protected string $message) {
-  }
+  public function __construct(
+    protected string $message
+  ) {}
+
   public function message(): string {
     return $this->message;
   }
 }
 
 final class MessageClient {
-  public function __construct(protected MockMessageClass $message) {
+  public function __construct(
+    protected MockMessageClass $message
+  ) {}
 
-  }
   public function message(): MockMessageClass {
     return $this->message;
   }

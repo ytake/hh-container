@@ -30,28 +30,35 @@ class FactoryTest extends HackTest {
 
 class StringFactory implements FactoryInterface {
   const type T = string;
+
   public function provide(FactoryContainer $_container): this::T {
     return 'testing';
   }
-  public function name(): string {
-    return 'testing';
-  }
+  
+  <<__Rx>>
   public function scope(): Scope {
     return Scope::SINGLETON;
+  }
+
+  <<__Rx>>
+  public function name(): string {
+    return 'testing';
   }
 }
 
 class MockClassFactory implements FactoryInterface {
   const type T = MockClass;
-
+  
   public function provide(FactoryContainer $_container): this::T {
     return new MockClass(1);
   }
 
+  <<__Rx>>
   public function scope(): Scope {
     return Scope::SINGLETON;
   }
 
+  <<__Rx>>
   public function name(): string {
     return MockClass::class;
   }

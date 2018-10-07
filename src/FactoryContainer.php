@@ -18,19 +18,20 @@
 namespace Ytake\HHContainer;
 
 use type Psr\Container\ContainerInterface;
+use type ReflectionClass;
+use type ReflectionMethod;
+use type ReflectionException;
 
-enum Scope : int {
-  PROTOTYPE = 0;
-  SINGLETON = 1;
-}
-
+use namespace HH\Lib\Dict;
 type TServiceModule = classname<ServiceModule>;
 type TCallable = (function(FactoryContainer): mixed);
 
+use function count;
 use function is_null;
 use function call_user_func;
 use function sprintf;
 use function array_key_exists;
+use function unset;
 
 /**
  * simple light weight service locator container
@@ -39,34 +40,19 @@ use function array_key_exists;
  */
 class FactoryContainer implements ContainerInterface {
 
-  protected Vector<TServiceModule> $modules = Vector {};
-
-  protected array<string, array<string, TCallable>>
-    $parameters = [];
-
-  protected bool $locked = false;
-
-  protected Map<string, Map<Scope, TCallable>> $mapper = Map{};
-
+  protected dict<string, Map<Scope, TCallable>> $mapper = dict[];
+  
   public function set(
     string $id,
     TCallable $callback,
     Scope $scope = Scope::PROTOTYPE,
   ): void {
-    $this->mapper->add(Pair {$id, Map{$scope => $callback}});
+    $this->mapper[$id] = Map{$scope => $callback};
   }
-
-  public function parameters(
-    string $id,
-    string $name,
-    TCallable $callback,
-  ): void {
-    $this->parameters[$id][$name] = $callback;
-  }
-
+  
   public function get($id): mixed {
     if ($this->has($id)) {
-      $resolved = $this->mapper->get($id);
+      $resolved = $this->mapper[$id];
       if (!is_null($resolved)) {
         if ($resolved->firstKey() === Scope::SINGLETON) {
           return $this->shared($id);
@@ -77,79 +63,43 @@ class FactoryContainer implements ContainerInterface {
         }
       }
     }
-    try {
-      $reflectionClass = new \ReflectionClass($id);
-      if ($reflectionClass->isInstantiable()) {
-        $arguments = Vector{};
-        $constructor = $reflectionClass->getConstructor();
-        if ($constructor instanceof \ReflectionMethod) {
-          $resolvedParameters = $this->resolveConstructorParameters($id, $constructor);
-          if ($resolvedParameters->count()) {
-            $arguments = $resolvedParameters;
-          }
-        }
-        return $reflectionClass->newInstanceArgs($arguments);
-      }
-    } catch (\ReflectionException $e) {
-      throw new NotFoundException(
-        sprintf('Identifier "%s" is not binding.', $id),
-      );
-    }
-    throw new ContainerException(sprintf('Error retrieving "%s"', $id));
+    throw new NotFoundException(
+      sprintf('Identifier "%s" is not binding.', $id),
+    );
   }
 
   <<__Memoize>>
   protected function shared(string $id): mixed {
-    $call = $this->mapper->at($id)->firstValue();
+    $call = $this->mapper[$id]->firstValue();
     if(!is_null($call)) {
       return call_user_func($call, $this);
     }
   }
-
+  
+  <<__Rx, __Mutable>>
   public function has($id): bool {
-    return $this->mapper->containsKey($id);
+    return array_key_exists($id, $this->mapper);
   }
-
+  
   public function bindings(
-  ): ImmMap<string, Map<Scope, TCallable>> {
-    return $this->mapper->toImmMap();
+  ): dict<string, Map<Scope, TCallable>> {
+    return $this->mapper;
   }
 
   public function flush(): void {
-    $this->mapper->clear();
+    $this->mapper = dict[];
   }
 
+  <<__Rx, __Mutable>>
   public function remove(string $id): void {
-    $this->mapper->removeKey($id);
+    if ($this->has($id)) {
+      unset($this->mapper[$id]);
+    }
   }
-
+  
   public function registerModule(TServiceModule $moduleClassName): void {
-    $this->modules->add($moduleClassName);
-  }
-
-  public function lockModule(): void {
-    foreach ($this->modules->getIterator() as $iterator) {
-      (new $iterator())->provide($this);
-    }
-  }
-
-  protected function resolveConstructorParameters(
-    string $id,
-    \ReflectionMethod $constructor,
-  ): Vector<mixed> {
-    $r = Vector{};
-    $parameters = $constructor->getParameters();
-    foreach ($parameters as $parameter) {
-      if (array_key_exists($id, $this->parameters)) {
-        if (array_key_exists($parameter->getName(), $this->parameters[$id])) {
-          $r->add(call_user_func(
-            $this->parameters[$id][$parameter->getName()],
-            $this,
-          ));
-        }
-      }
-    }
-    return $r;
+    new $moduleClassName()
+    |> $$->provide($this);
   }
 
   public function callable(MethodCallIntreface $invokable): mixed {

@@ -32,6 +32,7 @@ class MethodCaller implements MethodCallIntreface {
     }
   }
 
+  <<__Rx>>
   public function proceed(): mixed {
     $dynamicMethod = $this->invokeMethod;
     return /* UNSAFE_EXPR */ $this->instance->$dynamicMethod(...$this->args);
