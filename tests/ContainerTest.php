@@ -1,108 +1,99 @@
 <?hh // strict
 
+use type Facebook\HackTest\HackTest;
 use type Ytake\HHContainer\FactoryContainer;
 use type Ytake\HHContainer\ServiceModule;
+use function Facebook\FBExpect\expect;
+use \Ytake\HHContainer\NotFoundException;
 
-final class ContainerTest extends \PHPUnit\Framework\TestCase
-{
-  public function testShouldReturnPrimitiveTypes(): void
-  {
+final class ContainerTest extends HackTest {
+
+  public function testShouldReturnPrimitiveTypes(): void {
     $container = new \Ytake\HHContainer\FactoryContainer();
     $container->set(
       'testing',
       $container ==> 'testing'
     );
-    $this->assertSame('testing', $container->get('testing'));
-
+    expect($container->get('testing'));
     $container->set('testing123', $container ==> 1);
-    $this->assertSame(1, $container->get('testing123'));
+    expect($container->get('testing123'))->toBeSame(1);
 
     $container->set('testing:testing', $container ==> true);
-    $this->assertSame(true, $container->get('testing:testing'));
+    expect($container->get('testing:testing'))->toBeTrue();
   }
 
-  public function testShouldReturnSingletonObject(): void
-  {
+  public function testShouldReturnSingletonObject(): void {
     $container = new \Ytake\HHContainer\FactoryContainer();
     $container->set(
       'testing:testing',
       $container ==> new \stdClass(),
       \Ytake\HHContainer\Scope::SINGLETON
     );
-    $this->assertInstanceOf(\stdClass::class, $container->get('testing:testing'));
-    $this->assertSame($container->get('testing:testing'), $container->get('testing:testing'));
+    expect($container->get('testing:testing'))->toBeInstanceOf(\stdClass::class);
+    expect($container->get('testing:testing'))->toBeSame($container->get('testing:testing'));
   }
 
-  public function testShouldReturnPrototypeObject(): void
-  {
+  public function testShouldReturnPrototypeObject(): void {
     $container = new \Ytake\HHContainer\FactoryContainer();
     $container->set('testing:testing', $container ==> new \stdClass(), \Ytake\HHContainer\Scope::PROTOTYPE);
-    $this->assertInstanceOf(\stdClass::class, $container->get('testing:testing'));
-    $this->assertNotSame($container->get('testing:testing'), $container->get('testing:testing'));
+    expect($container->get('testing:testing'))->toBeInstanceOf(\stdClass::class);
+    expect($container->get('testing:testing'))->toBePHPEqual($container->get('testing:testing'));
   }
 
-  public function testShouldReturunResolveInstance(): void
-  {
-      $container = new \Ytake\HHContainer\FactoryContainer();
-      $container->set('testing', $container ==> 1);
-      $container->set(
-        'testing:testing',
-        $container ==> $container->get('testing'),
-        \Ytake\HHContainer\Scope::PROTOTYPE
-      );
-      $this->assertSame(1, $container->get('testing:testing'));
+  public function testShouldReturunResolveInstance(): void {
+    $container = new \Ytake\HHContainer\FactoryContainer();
+    $container->set('testing', $container ==> 1);
+    $container->set(
+      'testing:testing',
+      $container ==> $container->get('testing'),
+      \Ytake\HHContainer\Scope::PROTOTYPE
+    );
+    expect($container->get('testing:testing'))->toBeSame(1);
   }
 
-  public function testShouldThrowException() :void
-  {
-    $this->expectException(\Ytake\HHContainer\NotFoundException::class);
+  <<ExpectedException(NotFoundException::class)>>
+  public function testShouldThrowException() :void {
     $container = new \Ytake\HHContainer\FactoryContainer();
     $container->get('testing');
   }
 
-  /**
-   * @expectedException \Ytake\HHContainer\NotFoundException
-   */
-  public function testShouldReturnProvideInstance(): void
-  {
+  <<ExpectedException(NotFoundException::class)>>
+  public function testShouldReturnProvideInstance(): void {
     $container = new \Ytake\HHContainer\FactoryContainer();
     $container->registerModule(StubModule::class);
     $container->lockModule();
-    $this->assertInstanceOf(\stdClass::class, $container->get('provide:sample'));
+    expect($container->get('provide:sample'))->toBeInstanceOf(\stdClass::class);
     $container->set('message.class', $container ==>  new MockMessageClass('testing'));
-    $container->get('message.class');
+    expect($container->get('message.class'))->toBeInstanceOf(MockMessageClass::class);
   }
 
-  public function testShouldResolveInstance(): void
-  {
+  public function testShouldResolveInstance(): void {
     $container = new \Ytake\HHContainer\FactoryContainer();
-    $this->assertInstanceOf(\stdClass::class, $container->get(\stdClass::class));
+    expect($container->get(\stdClass::class))->toBeInstanceOf(\stdClass::class);
     $container->parameters(ResolvedObject::class, 'object', $container ==> new \stdClass());
     $container->parameters(ResolvedObject::class, 'integer', $container ==> 100);
     $instance = $container->get(ResolvedObject::class);
-    $this->assertInstanceOf(ResolvedObject::class, $instance);
+    expect($instance)->toBeInstanceOf(ResolvedObject::class);
   }
 
-  public function testShouldResolveConstructorPromotionInstance(): void
-  {
+  public function testShouldResolveConstructorPromotionInstance(): void {
     $container = new \Ytake\HHContainer\FactoryContainer();
     $container->parameters(ConstructorPromotionClass::class, 'object', $container ==> new \stdClass());
     $container->parameters(ConstructorPromotionClass::class, 'integer', $container ==> 100);
     $instance = $container->get(ConstructorPromotionClass::class);
-    $this->assertInstanceOf(ConstructorPromotionClass::class, $instance);
+    expect($instance)->toBeInstanceOf(ConstructorPromotionClass::class);
     if ($instance instanceof ConstructorPromotionClass) {
-      $this->assertSame(100, $instance->getInteger());
+      expect($instance->getInteger())->toBeSame(100);
     }
   }
 
-  public function testShouldResolveDependencyInjectionWithLocation(): void
-  {
+  public function testShouldResolveDependencyInjectionWithLocation(): void {
     $container = new FactoryContainer();
     $container->set('message.class', $container ==>  new MockMessageClass('testing'));
     $container->parameters(MessageClient::class, 'message', $container ==> $container->get('message.class'));
     $instance = $container->get(MessageClient::class);
     if ($instance instanceof MessageClient) {
-      $this->assertSame('testing', $instance->message()->message());
+      expect($instance->message()->message())->toBeSame('testing');
     }
   }
 }

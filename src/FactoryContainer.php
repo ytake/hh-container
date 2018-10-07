@@ -53,9 +53,7 @@ class FactoryContainer implements ContainerInterface {
     TCallable $callback,
     Scope $scope = Scope::PROTOTYPE,
   ): void {
-    if (!$this->locked) {
-      $this->mapper->add(Pair {$id, Map{$scope => $callback}});
-    }
+    $this->mapper->add(Pair {$id, Map{$scope => $callback}});
   }
 
   public function parameters(
@@ -63,9 +61,7 @@ class FactoryContainer implements ContainerInterface {
     string $name,
     TCallable $callback,
   ): void {
-    if (!$this->locked) {
-      $this->parameters[$id][$name] = $callback;
-    }
+    $this->parameters[$id][$name] = $callback;
   }
 
   public function get($id): mixed {
@@ -104,8 +100,7 @@ class FactoryContainer implements ContainerInterface {
 
   <<__Memoize>>
   protected function shared(string $id): mixed {
-    $shared = $this->mapper->at($id);
-    $call = $shared->firstValue();
+    $call = $this->mapper->at($id)->firstValue();
     if(!is_null($call)) {
       return call_user_func($call, $this);
     }
@@ -122,26 +117,20 @@ class FactoryContainer implements ContainerInterface {
 
   public function flush(): void {
     $this->mapper->clear();
-    $this->locked = false;
   }
 
   public function remove(string $id): void {
-    if (!$this->locked) {
-      $this->mapper->removeKey($id);
-    }
+    $this->mapper->removeKey($id);
   }
 
   public function registerModule(TServiceModule $moduleClassName): void {
-    if (!$this->locked) {
-      $this->modules->add($moduleClassName);
-    }
+    $this->modules->add($moduleClassName);
   }
 
   public function lockModule(): void {
     foreach ($this->modules->getIterator() as $iterator) {
       (new $iterator())->provide($this);
     }
-    $this->locked = true;
   }
 
   protected function resolveConstructorParameters(

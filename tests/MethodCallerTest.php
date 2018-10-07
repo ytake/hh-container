@@ -1,12 +1,14 @@
 <?hh // strict
 
+use type Facebook\HackTest\HackTest;
 use type Ytake\HHContainer\MethodCaller;
 use type Ytake\HHContainer\FactoryContainer;
 
-class InvokableTest extends \PHPUnit\Framework\TestCase
-{
-  public function testShouldReturnExpectValues(): void
-  {
+use function Facebook\FBExpect\expect;
+
+class MethodCallerTest extends HackTest {
+
+  public function testShouldReturnExpectValues(): void {
     $container = new \Ytake\HHContainer\FactoryContainer();
     $container->set(
       TestingInvokable::class,
@@ -18,8 +20,8 @@ class InvokableTest extends \PHPUnit\Framework\TestCase
       $container ==>
         $container->callable(new MethodCaller(new TestingInvokableTwo(), 'execute'))
     );
-    $this->assertSame(1, $container->get(TestingInvokable::class));
-    $this->assertSame('testing', $container->get(TestingInvokableTwo::class));
+    expect($container->get(TestingInvokable::class))->toBeSame(1);
+    expect($container->get(TestingInvokableTwo::class))->toBeSame('testing');
   }
 }
 

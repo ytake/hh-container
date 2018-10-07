@@ -1,30 +1,30 @@
 <?hh // strict
 
+use type Facebook\HackTest\HackTest;
 use type Ytake\HHContainer\Scope;
 use type Ytake\HHContainer\ServiceFactory;
 use type Ytake\HHContainer\FactoryContainer;
 use type Ytake\HHContainer\FactoryInterface;
 
-class FactoryTest extends \PHPUnit\Framework\TestCase
-{
-  public function testShouldReturnExpectValues(): void
-  {
+use function Facebook\FBExpect\expect;
+
+class FactoryTest extends HackTest {
+  public function testShouldReturnExpectValues(): void {
     $factory = new ServiceFactory(new FactoryContainer());
     $factory->registerFactory(new StringFactory());
-    $this->assertSame('testing', $factory->create('testing'));
+    expect($factory->create('testing'))->toBeSame('testing');
   }
 
-  public function testShouldReturnStdClass(): void
-  {
+  public function testShouldReturnStdClass(): void {
     $factory = new ServiceFactory(new FactoryContainer());
     $factory->registerFactory(new MockClassFactory());
     $i = $factory->create(MockClass::class);
-    $this->assertInstanceOf(MockClass::class, $i);
+    expect($i)->toBeInstanceOf(MockClass::class);
     if($i instanceof MockClass) {
-      $this->assertSame(1, $i->getT());
+      expect($i->getT())->toBeSame(1);
     }
-    $this->assertInstanceOf(MockClass::class, $factory->create(MockClass::class));
-    $this->assertSame($factory->create(MockClass::class), $factory->create(MockClass::class));
+    expect($factory->create(MockClass::class))->toBeInstanceOf(MockClass::class);
+    expect($factory->create(MockClass::class))->toBeSame($factory->create(MockClass::class));
   }
 }
 

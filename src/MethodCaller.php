@@ -18,6 +18,8 @@
 
 namespace Ytake\HHContainer;
 
+use function is_object;
+
 class MethodCaller implements MethodCallIntreface {
 
   public function __construct(
