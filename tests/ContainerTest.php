@@ -4,7 +4,7 @@ use type Facebook\HackTest\HackTest;
 use type Ytake\HHContainer\FactoryContainer;
 use type Ytake\HHContainer\ServiceModule;
 use function Facebook\FBExpect\expect;
-use \Ytake\HHContainer\NotFoundException;
+use type Ytake\HHContainer\NotFoundException;
 
 final class ContainerTest extends HackTest {
 

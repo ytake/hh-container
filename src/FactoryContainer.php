@@ -18,21 +18,14 @@
 namespace Ytake\HHContainer;
 
 use type Psr\Container\ContainerInterface;
-use type ReflectionClass;
-use type ReflectionMethod;
-use type ReflectionException;
-
-use namespace HH\Lib\Dict;
 
 type TServiceModule = classname<ServiceModule>;
 type TCallable = (function(FactoryContainer): mixed);
 
-use function count;
 use function is_null;
 use function call_user_func;
 use function sprintf;
 use function array_key_exists;
-use function unset;
 
 /**
  * simple light weight service locator container
@@ -41,14 +34,14 @@ use function unset;
  */
 class FactoryContainer implements ContainerInterface {
 
-  protected dict<string, Map<Scope, TCallable>> $mapper = dict[];
+  protected Map<string, Map<Scope, TCallable>> $mapper = Map{};
 
   public function set(
     string $id,
     TCallable $callback,
     Scope $scope = Scope::PROTOTYPE,
   ): void {
-    $this->mapper[$id] = Map{$scope => $callback};
+    $this->mapper->add(Pair {$id, Map{$scope => $callback}});
   }
 
   public function get($id): mixed {
@@ -82,16 +75,20 @@ class FactoryContainer implements ContainerInterface {
     return array_key_exists($id, $this->mapper);
   }
 
+  <<__Rx>>
   public function bindings(
-  ): dict<string, Map<Scope, TCallable>> {
-    return $this->mapper;
+  ): ImmMap<string, Map<Scope, TCallable>> {
+    return $this->mapper->toImmMap();
   }
 
-  <<__Rx, __Mutable>>
   public function remove(string $id): void {
     if ($this->has($id)) {
-      unset($this->mapper[$id]);
+      $this->mapper->removeKey($id);
     }
+  }
+
+  public function flush(): void {
+    $this->mapper->clear();
   }
 
   public function registerModule(TServiceModule $moduleClassName): void {
