@@ -18,6 +18,8 @@
 
 namespace Ytake\HHContainer;
 
+use function is_object;
+
 class MethodCaller implements MethodCallIntreface {
 
   public function __construct(
@@ -30,6 +32,7 @@ class MethodCaller implements MethodCallIntreface {
     }
   }
 
+  <<__Rx>>
   public function proceed(): mixed {
     $dynamicMethod = $this->invokeMethod;
     return /* UNSAFE_EXPR */ $this->instance->$dynamicMethod(...$this->args);

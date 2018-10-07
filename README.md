@@ -45,30 +45,24 @@ $container->set('scope:prototype', $container ==> new \stdClass(), \Ytake\HHCont
 ## Dependency Injection
 
 ### set parameters
-
-```hack
-$container->parameters(
-  'string className',
-  'parameter name',
-  $container ==> 'parameter value'
-);
-```
-
 sample class
 
 ```hack
 final class MessageClass {
-  public function __construct(protected string $message) {
-  }
+  public function __construct(
+    protected string $message
+  ) {}
+
   public function message(): string {
     return $this->message;
   }
 }
 
 final class MessageClient {
-  public function __construct(protected MessageClass $message) {
+  public function __construct(
+    protected MessageClass $message
+  ) {}
 
-  }
   public function message(): MessageClass {
     return $this->message;
   }
@@ -80,7 +74,11 @@ final class MessageClient {
 ```hack
 $container = new \Ytake\HHContainer\FactoryContainer();
 $container->set('message.class', $container ==> new MessageClass('testing'));
-$container->parameters(MessageClient::class, 'message', $container ==> $container->get('message.class'));
+$container->set(MessageClient::class, $container ==> {
+  $instance = $container->get('message.class');
+  invariant($instance instanceof MockMessageClass, 'error');
+  new MessageClient($instance);
+});
 $instance = $container->get(MessageClient::class);
 ```
 
@@ -112,10 +110,9 @@ $container->set(TestingInvokable::class, $container ==>
 use Ytake\HHContainer\ServiceModule;
 use Ytake\HHContainer\FactoryContainer;
 
-class ExampleModule extends ServiceModule
-{
-  public function provide(FactoryContainer $container): void
-  {
+class ExampleModule extends ServiceModule {
+  
+  public function provide(FactoryContainer $container): void {
     $container->set('example', $container ==> new \stdClass());
   }
 }
