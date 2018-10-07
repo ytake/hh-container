@@ -23,6 +23,7 @@ use type ReflectionMethod;
 use type ReflectionException;
 
 use namespace HH\Lib\Dict;
+
 type TServiceModule = classname<ServiceModule>;
 type TCallable = (function(FactoryContainer): mixed);
 
@@ -41,7 +42,7 @@ use function unset;
 class FactoryContainer implements ContainerInterface {
 
   protected dict<string, Map<Scope, TCallable>> $mapper = dict[];
-  
+
   public function set(
     string $id,
     TCallable $callback,
@@ -49,7 +50,7 @@ class FactoryContainer implements ContainerInterface {
   ): void {
     $this->mapper[$id] = Map{$scope => $callback};
   }
-  
+
   public function get($id): mixed {
     if ($this->has($id)) {
       $resolved = $this->mapper[$id];
@@ -75,12 +76,12 @@ class FactoryContainer implements ContainerInterface {
       return call_user_func($call, $this);
     }
   }
-  
+
   <<__Rx, __Mutable>>
   public function has($id): bool {
     return array_key_exists($id, $this->mapper);
   }
-  
+
   public function bindings(
   ): dict<string, Map<Scope, TCallable>> {
     return $this->mapper;
@@ -96,7 +97,7 @@ class FactoryContainer implements ContainerInterface {
       unset($this->mapper[$id]);
     }
   }
-  
+
   public function registerModule(TServiceModule $moduleClassName): void {
     new $moduleClassName()
     |> $$->provide($this);

@@ -19,7 +19,7 @@
 namespace Ytake\HHContainer;
 
 interface MethodCallIntreface {
-  
+
   <<__Rx>>
   public function proceed(): mixed;
 }

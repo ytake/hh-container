@@ -34,7 +34,7 @@ class StringFactory implements FactoryInterface {
   public function provide(FactoryContainer $_container): this::T {
     return 'testing';
   }
-  
+
   <<__Rx>>
   public function scope(): Scope {
     return Scope::SINGLETON;
@@ -48,7 +48,7 @@ class StringFactory implements FactoryInterface {
 
 class MockClassFactory implements FactoryInterface {
   const type T = MockClass;
-  
+
   public function provide(FactoryContainer $_container): this::T {
     return new MockClass(1);
   }

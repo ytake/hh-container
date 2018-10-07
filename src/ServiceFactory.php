@@ -28,12 +28,12 @@ class ServiceFactory {
   public function __construct(
     protected FactoryContainer $container
   ) {}
-  
+
   <<__Rx, __Mutable>>
   public function registerFactory(FactoryInterface $factory): void {
     $this->factories[$factory->name()] = $factory;
   }
-  
+
   <<__Rx, __Mutable>>
   public function has(string $factoryName): bool {
     return array_key_exists($factoryName, $this->factories);

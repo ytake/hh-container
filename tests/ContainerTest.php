@@ -119,7 +119,7 @@ class ResolvedObject {
   private \stdClass $object;
   private int $integer;
   public function __construct(
-    \stdClass $object, 
+    \stdClass $object,
     int $integer = 1
   ) {
     $this->object = $object;
