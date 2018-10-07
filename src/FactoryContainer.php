@@ -87,10 +87,6 @@ class FactoryContainer implements ContainerInterface {
     return $this->mapper;
   }
 
-  public function flush(): void {
-    $this->mapper = dict[];
-  }
-
   <<__Rx, __Mutable>>
   public function remove(string $id): void {
     if ($this->has($id)) {
